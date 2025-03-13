@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.ts",
     "generate": "npx prisma generate",
-    "migrate:postgres": "dotenv -e .env -- npx prisma migrate deploy"
+    "migrate:postgres": "dotenv -e .env -- npx prisma migrate deploy" 
   },
   "keywords": [],
   "author": "",
