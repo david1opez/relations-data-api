@@ -37,3 +37,4 @@ export default async function Home(req: Request, res: Response) {
         Error(res, 500, err);
     }
 };
+ 
