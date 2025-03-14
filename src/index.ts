@@ -16,7 +16,8 @@ const router = express.Router();
 
 // ROUTES HANDLING
 router.get('/', Routes.Home);
-router.get('/msft-auth', Routes.MicrosoftAuth);
+
+router.post('/msft-auth', Routes.MicrosoftAuth);
 
 // MIDDLEWARE
 app.use(cors());
