@@ -9,6 +9,8 @@ import { StartServer } from './utils/express/utils';
 // ROUTES
 import * as Routes from './routes/exportRoutes';
 import getUserProjects from './routes/getUserProjects';
+import getAllProjects from './routes/getAllProjects';
+
 dotenv.config();
 
 const app = express();
@@ -18,6 +20,8 @@ const router = express.Router();
 router.get('/', Routes.Home);
 
 router.get('/user/:userID/projects', getUserProjects);
+
+router.get('/projects', getAllProjects);
 
 router.post('/msft-auth', Routes.MicrosoftAuth);
 
