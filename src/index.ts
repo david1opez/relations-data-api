@@ -10,6 +10,8 @@ import { StartServer } from './utils/express/utils';
 import * as Routes from './routes/exportRoutes';
 import getUserProjects from './routes/getUserProjects';
 import getAllProjects from './routes/getAllProjects';
+import getDetailsCall from './routes/getDetailsCall';
+import getCalls from './routes/getCalls';
 
 dotenv.config();
 
@@ -24,6 +26,10 @@ router.get('/user/:userID/projects', getUserProjects);
 router.get('/projects', getAllProjects);
 
 router.post('/msft-auth', Routes.MicrosoftAuth);
+
+router.get('/call/:callID', getDetailsCall);
+
+router.get('/calls', getCalls);
 
 // MIDDLEWARE
 app.use(cors());

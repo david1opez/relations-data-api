@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.ts",
     "generate": "npx prisma generate",
-    "migrate:postgres": "dotenv -e .env -- npx prisma migrate deploy"
+    "migrate:postgres": "dotenv -e .env -- npx prisma migrate deploy",
+    "db:seed": "npx prisma db seed"
+
   },
   "keywords": [],
   "author": "",
@@ -17,6 +19,7 @@
     "@types/body-parser": "^1.19.5",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/faker": "^6.6.11",
     "nodemon": "^3.1.9",
     "prisma": "^6.5.0",
     "ts-node": "^10.9.2",
@@ -26,6 +29,7 @@
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
+    "@faker-js/faker": "^9.6.0",
     "@prisma/client": "^6.5.0",
     "@prisma/extension-accelerate": "^1.2.2",
     "body-parser": "^1.20.2",
