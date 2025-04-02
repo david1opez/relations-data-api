@@ -23,6 +23,8 @@ router.get('/projects', Routes.getAllProjects);
 
 router.post('/msft-auth', Routes.MicrosoftAuth);
 
+router.get('/calls', Routes.getCalls);
+
 // MIDDLEWARE
 app.use(cors());
 app.use(bodyParser.json({ limit: '1mb' }));

@@ -19,7 +19,7 @@ export default async function getUserProjects(req: Request, res: Response) {
         const userProjects = await prisma.userProject.findMany({
             where: { userID: parseInt(userID) },
             include: {
-                project: true // Inclde project details
+                project: true // Include project details
             }
         });
 
