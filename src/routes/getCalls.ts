@@ -11,7 +11,6 @@ const prisma = new PrismaClient();
 export default async function getCalls(req: Request, res: Response) {
     try {
         const { projectID } = req.query; 
-        console.log("Project ID:", projectID); // Debugging line
         
         if (!projectID) {
             return Error(res, 400, "Project ID is required");

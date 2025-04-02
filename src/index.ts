@@ -23,7 +23,9 @@ router.get('/projects', Routes.getAllProjects);
 
 router.post('/msft-auth', Routes.MicrosoftAuth);
 
-router.get('/calls', Routes.getCalls);
+router.get('/calls', Routes.getCalls);//?projectID=1234
+
+router.get('/details', Routes.getCall); //?callID=1234
 
 // MIDDLEWARE
 app.use(cors());
