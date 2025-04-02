@@ -6,6 +6,8 @@ import { Error, SendResponse } from "../utils/express/utils";
 // TYPES
 import { Request, Response } from 'express';
 
+import parseVTT from '../transcriptProcessing';
+
 const prisma = new PrismaClient();
 
 export default async function getCall(req: Request, res: Response) {
@@ -35,6 +37,10 @@ export default async function getCall(req: Request, res: Response) {
 
         if (!call) {
             return Error(res, 404, "Call not found");
+        }
+
+        if (call.summary) {
+            call.summary = parseVTT(call.summary);
         }
 
         SendResponse(res, 200, { call });
