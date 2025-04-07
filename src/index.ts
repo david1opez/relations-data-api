@@ -19,7 +19,7 @@ router.get('/', Routes.Home);
 
 router.get('/user/:userID/projects', Routes.getUserProjects);
 
-router.get('/projects', Routes.getAllProjects);
+router.get('/projects', Routes.getAllProjects); 
 
 router.post('/msft-auth', Routes.MicrosoftAuth);
 
