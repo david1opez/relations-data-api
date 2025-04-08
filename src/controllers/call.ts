@@ -73,6 +73,10 @@ class CallController {
             outputLines.push(group.text.join(' '));
             outputLines.push(''); // blank line between groups
         }
+
+        if (groups.length > 0) {
+            outputLines.pop();
+        }
     
         return outputLines.join('\n');
     }
