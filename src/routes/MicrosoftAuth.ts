@@ -1,5 +1,5 @@
 // HELPER FUNCTIONS
-import { Error, SendResponse } from "../utils/express/utils";
+import { Error, SendResponse } from "../utils/utils";
 
 // TYPES
 import { Request, Response } from 'express';
