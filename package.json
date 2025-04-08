@@ -4,7 +4,8 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "npx prisma db push && npx prisma generate",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "dev": "nodemon src/index.ts",
     "generate": "npx prisma generate",
     "migrate:postgres": "dotenv -e .env -- npx prisma migrate deploy"
@@ -22,6 +23,7 @@
     "jest-mock-extended": "^4.0.0-beta1",
     "nodemon": "^3.1.9",
     "prisma": "^6.5.0",
+    "ts-jest": "^29.3.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
