@@ -30,6 +30,7 @@ class UserHandler{
             const user = await this.userController.checkLogin(userIDInt, passwordString);
             res.status(200).json(user);
         } catch (err) {
+            next(err)
         }
     }
 }
