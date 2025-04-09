@@ -23,7 +23,7 @@ export default async function Home(req: Request, res: Response) {
                 code: code as string,
                 redirect_uri: process.env.MSFT_REDIRECT_URL || '',
                 grant_type: 'authorization_code',
-                client_secret: process.env.MSFT_CLIENT_SECRET || ''
+                client_secret: process.env.MSFT_CLIENT_SECRET || '' 
             })
         })
         .then(response => response.json())
