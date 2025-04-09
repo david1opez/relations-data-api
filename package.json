@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "src/index.ts",
   "scripts": {
-    "build": "npx prisma db push && npx prisma generate",
+    "build": "npx prisma db push --accept-data-loss && npx prisma generate",
     "test": "jest",
     "test:watch": "jest --watch",
     "dev": "nodemon src/index.ts",

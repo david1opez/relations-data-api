@@ -5,6 +5,7 @@ import Home from './Home';
 import MicrosoftAuth from './MicrosoftAuth';
 
 const api = Router();
+
 api.use("/call", callRouter);
 api.use("/project", projectRouter);
 api.get("/", Home);
