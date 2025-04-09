@@ -18,6 +18,7 @@ model User {
   userID       Int                  @id @default(autoincrement())
   name         String
   email        String               @unique
+  password     String?
   role         String?
   departmentID Int?
   department   Department?          @relation(fields: [departmentID], references: [departmentID])
