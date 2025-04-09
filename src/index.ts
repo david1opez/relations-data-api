@@ -1,36 +1,52 @@
-import express from 'express';
+import express, { NextFunction, Request, Response, ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 
 // HELPER FUNCTIONS
-import { StartServer } from './utils/express/utils';
+import { StartServer } from './utils/utils';
 
 // ROUTES
-import * as Routes from './routes/exportRoutes';
+import routes from './routes/routes';
+
+import HttpException from './models/http-exception';
 
 dotenv.config();
 
 const app = express();
-const router = express.Router();
-
-// ROUTES HANDLING
-router.get('/', Routes.Home);
-
-router.get('/user/:userID/projects', Routes.getUserProjects);
-
-router.get('/projects', Routes.getAllProjects); 
-
-router.post('/msft-auth', Routes.MicrosoftAuth);
-
-router.get('/calls', Routes.getCalls);//?projectID=1234
-
-router.get('/details', Routes.getCall); //?callID=1234
 
 // MIDDLEWARE
 app.use(cors());
 app.use(bodyParser.json({ limit: '1mb' }));
-app.use('/', router);
+app.use(routes);
+
+const errorMiddleware: ErrorRequestHandler = (err, req, res, next) => {
+    if (err instanceof HttpException) {
+      res.status(err.errorCode).json({
+        status: 'error',
+        message: err.message
+      });
+      return;
+    }
+  
+    if (err.name === 'UnauthorizedError') {
+      res.status(401).json({
+        status: 'error',
+        message: 'missing authorization credentials'
+      });
+      return;
+    }
+  
+    // Handle any other errors
+    console.error(err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+    return;
+};
+  
+app.use(errorMiddleware);
 
 // INITIALIZE SERVER
 StartServer(app, 3000);
