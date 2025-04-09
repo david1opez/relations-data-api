@@ -1,7 +1,6 @@
 import CallHandler from '../call';
 import { Request, Response } from 'express';
 import HttpException from '../../models/http-exception';
-import { StartServer } from '../../utils/utils';
 
 describe('CallHandler', () => {
     let callHandler: CallHandler;
@@ -95,7 +94,8 @@ describe('CallHandler', () => {
                             userID: 1,
                             email: 'john.doe@example.com',
                             role: 'Manager' as string | null,
-                            departmentID: 101 as number | null
+                            departmentID: 101 as number | null,
+                            password: null,
                         },
                         callID: 1,
                         userID: 1
