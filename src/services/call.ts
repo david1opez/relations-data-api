@@ -15,6 +15,9 @@ class CallService {
     
             return calls;
         } catch (err) {
+            if (err instanceof HttpException) {
+                throw err;
+            }
             throw new HttpException(500, "Error fetching calls" + err);
         }
     }
@@ -44,6 +47,9 @@ class CallService {
             return call;
     
         } catch (err) {
+            if (err instanceof HttpException) {
+                throw err;
+            }
             throw new HttpException(500, "An error occurred while fetching the call" + err);
         }
     }

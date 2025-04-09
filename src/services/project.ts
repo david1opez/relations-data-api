@@ -7,6 +7,9 @@ class ProjectService {
             const projects = await prisma.project.findMany();
             return projects;
         } catch (err) {
+            if (err instanceof HttpException) {
+                throw err;
+            }
             throw new HttpException(500, "Error fetching projects" + err);
         }
     }
@@ -24,6 +27,9 @@ class ProjectService {
 
             return projects;
         } catch (err) {
+            if (err instanceof HttpException) {
+                throw err;
+            }
             throw new HttpException(500, "Error fetching user projects" + err);
         }
     }
