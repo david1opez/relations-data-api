@@ -15,6 +15,10 @@ dotenv.config();
 
 const app = express();
 
+router.get('/call/:callID', getDetailsCall);
+
+router.get('/calls', getCalls);
+
 // MIDDLEWARE
 app.use(cors());
 app.use(bodyParser.json({ limit: '1mb' }));
