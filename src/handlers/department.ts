@@ -1,41 +1,50 @@
-// src/handlers/department.ts
 import { Request, Response, NextFunction } from "express";
 import DepartmentController from "../controllers/department";
 import HttpException from "../models/http-exception";
 
-class DepartmentHandler {
-  private ctrl = new DepartmentController();
+export default class DepartmentHandler {
+  public departmentController: DepartmentController;
 
-  async getAll(req: Request, res: Response, next: NextFunction) {
+  constructor() {
+    this.departmentController = new DepartmentController();
+  }
+
+  // GET /departments
+  public async getAll(req: Request, res: Response, next: NextFunction) {
     try {
-      const depts = await this.ctrl.getAll();
+      const depts = await this.departmentController.getAllDepartments();
       res.status(200).json(depts);
-    } catch (e) {
-      next(e);
+    } catch (err) {
+      next(err);
     }
   }
 
-  async create(req: Request, res: Response, next: NextFunction) {
+  // POST /departments
+  public async create(req: Request, res: Response, next: NextFunction) {
     try {
       const { name } = req.body;
-      if (!name) throw new HttpException(400, "El nombre es requerido");
-      const dept = await this.ctrl.create(name);
+      if (!name) {
+        throw new HttpException(400, "Department name is required");
+      }
+      const dept = await this.departmentController.createDepartment(name);
       res.status(201).json(dept);
-    } catch (e) {
-      next(e);
+    } catch (err) {
+      next(err);
     }
   }
 
-  async remove(req: Request, res: Response, next: NextFunction) {
+  // DELETE /departments/:departmentID
+  public async remove(req: Request, res: Response, next: NextFunction) {
     try {
-      const id = Number(req.params.departmentID);
-      if (isNaN(id)) throw new HttpException(400, "ID inválido");
-      await this.ctrl.remove(id);
+      const { departmentID } = req.params;
+      if (!departmentID) {
+        throw new HttpException(400, "Department ID is required");
+      }
+      const id = parseInt(departmentID, 10);
+      await this.departmentController.deleteDepartment(id);
       res.sendStatus(204);
-    } catch (e) {
-      next(e);
+    } catch (err) {
+      next(err);
     }
   }
 }
-
-export default DepartmentHandler;

@@ -1,19 +1,26 @@
-// src/controllers/department.ts
-import DepartmentService from "../services/department";
+import DepartmentService from '../services/department';
+import { Department } from '@prisma/client';
 
 class DepartmentController {
-  private service = new DepartmentService();
+  private departmentService: DepartmentService;
 
-  async getAll() {
-    return this.service.getAllDepartments();
+  constructor() {
+    this.departmentService = new DepartmentService();
   }
 
-  async create(name: string) {
-    return this.service.createDepartment(name);
+  /** Devuelve todos los departamentos */
+  async getAllDepartments(): Promise<Department[]> {
+    return this.departmentService.getAllDepartments();
   }
 
-  async remove(id: number) {
-    return this.service.deleteDepartment(id);
+  /** Crea un departamento nuevo */
+  async createDepartment(name: string): Promise<Department> {
+    return this.departmentService.createDepartment(name);
+  }
+
+  /** Elimina un departamento existente */
+  async deleteDepartment(departmentID: number): Promise<void> {
+    return this.departmentService.deleteDepartment(departmentID);
   }
 }
 
