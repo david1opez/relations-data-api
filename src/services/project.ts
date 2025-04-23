@@ -51,7 +51,27 @@ class ProjectService {
           console.error("Error in addProject service:", err);
           throw new HttpException(500, "Error adding project: " + err);
         }
-      }
+    }
+
+    async deleteProject(projectID: number){
+        try{
+            const project = await prisma.project.findUnique({where: {projectID: projectID}});
+            
+            if(!project){
+                throw new HttpException(404, `Project with ID ${projectID} not found`);
+            }
+
+            const deletedProject = await prisma.project.delete({where: {projectID: projectID}});
+            
+            return deletedProject;
+        } catch(err) {
+            if (err instanceof HttpException) {
+                throw err;
+            }
+            console.error("Error in deleteProject service: ", err);
+            throw new HttpException(500, "Error deleting project: " + err);
+        }
+    }
 }
 
 export default ProjectService;

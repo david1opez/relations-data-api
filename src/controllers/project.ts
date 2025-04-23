@@ -34,6 +34,19 @@ class ProjectController {
             throw new HttpException(500, "Error adding project: " + err);
         }
     }
+
+    async deleteProject(projectID: number){
+        try {
+            const deletedProject = await this.projectService.deleteProject(projectID);
+            return deletedProject;
+        } catch (err) {
+
+            if(err instanceof HttpException){
+                throw err;
+            }
+            throw new HttpException(500, "Error deleting project: " + err);
+        }
+    }
 }
 
 export default ProjectController;

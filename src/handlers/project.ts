@@ -47,6 +47,21 @@ class ProjectHandler {
             next(err);
         }
     }
+
+    public async deleteProject(req: Request, res: Response, next: NextFunction){
+        try {
+            const {id: projectID} = req.params;
+
+            if(!projectID){
+                throw new HttpException(400, "Project ID is required")
+            }
+
+            const deletedProject = await this.projectController.deleteProject(parseInt(projectID));
+            res.status(202).json({message: "Project successfully eliminated", deletedProject: deletedProject});
+        } catch(err) {
+            next(err);
+        }
+    }
 }
 
 export default ProjectHandler;
