@@ -28,12 +28,12 @@ model User {
 }
 
 model AuditLog {
-  logID       Int    @id @default(autoincrement())
+  logID       Int      @id @default(autoincrement())
   action      String
   dateTime    DateTime @default(now())
   description String?
   userID      Int
-  user        User   @relation(fields: [userID], references: [userID])
+  user        User     @relation(fields: [userID], references: [userID])
 }
 
 model Client {
@@ -58,19 +58,19 @@ model UserProject {
   projectRole String?
 
   user    User    @relation(fields: [userID], references: [userID])
-  project Project @relation(fields: [projectID], references: [projectID])
+  project Project @relation(fields: [projectID], references: [projectID], onDelete: Cascade)
 
   @@id([userID, projectID])
 }
 
 model Call {
-  callID    Int    @id @default(autoincrement())
+  callID    Int      @id @default(autoincrement())
   title     String?
   startTime DateTime?
   endTime   DateTime?
   summary   String?
   projectID Int
-  project   Project @relation(fields: [projectID], references: [projectID])
+  project   Project  @relation(fields: [projectID], references: [projectID], onDelete: Cascade)
   internalParticipants InternalCallParticipants[]
   externalParticipants ExternalCallParticipants[]
   reportCalls ReportCall[]
@@ -81,7 +81,7 @@ model InternalCallParticipants {
   callID Int
 
   user User @relation(fields: [userID], references: [userID])
-  call Call @relation(fields: [callID], references: [callID])
+  call Call @relation(fields: [callID], references: [callID], onDelete: Cascade)
 
   @@id([userID, callID])
 }
@@ -91,7 +91,7 @@ model ExternalCallParticipants {
   callID      Int
 
   client Client @relation(fields: [clientEmail], references: [email])
-  call   Call   @relation(fields: [callID], references: [callID])
+  call   Call   @relation(fields: [callID], references: [callID], onDelete: Cascade)
 
   @@id([clientEmail, callID])
 }
@@ -103,7 +103,7 @@ model Report {
   fileURL     String?
   format      String?
   projectID   Int
-  project     Project  @relation(fields: [projectID], references: [projectID])
+  project     Project  @relation(fields: [projectID], references: [projectID], onDelete: Cascade)
   reportCalls ReportCall[]
 }
 
@@ -114,8 +114,8 @@ model ReportCall {
   startTime DateTime?
   endTime   DateTime?
 
-  report Report @relation(fields: [reportID], references: [reportID])
-  call   Call   @relation(fields: [callID], references: [callID])
+  report Report @relation(fields: [reportID], references: [reportID], onDelete: Cascade)
+  call   Call   @relation(fields: [callID], references: [callID], onDelete: Cascade)
 
   @@id([reportID, callID])
 }
