@@ -53,6 +53,35 @@ class CallService {
             throw new HttpException(500, "An error occurred while fetching the call" + err);
         }
     }
+
+    async setCall(callData: any) {
+        try {
+            let call;
+            if (callData.callID) {
+                call = await prisma.call.update({
+                    where: { 
+                        callID: callData.callID
+                    },
+                    data: {
+                        ...callData
+                    }
+                });
+            } else {
+                call = await prisma.call.create({
+                    data: {
+                        ...callData
+                    }
+                });
+            }
+            return call;
+        } catch (err) {
+            if (err instanceof HttpException) {
+                throw err;
+            }
+            throw new HttpException(500, "Error setting call" + err);
+        }
+    }
+
 }
 
 export default CallService

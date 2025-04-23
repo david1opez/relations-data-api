@@ -38,6 +38,27 @@ class CallHandler {
             next(err);
         }
     }
+
+    public async setCall(req: Request, res: Response, next: NextFunction) {
+        try {
+            const callData = req.body; 
+
+            if (!callData) {
+                throw new HttpException(400, "Call data is required");
+            }
+
+            let call;
+            if (callData.callID) {
+                call = await this.callController.updateCall(callData);
+            } else {
+                call = await this.callController.createCall(callData);
+            }
+
+            res.status(200).json(call);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export default CallHandler;
