@@ -8,6 +8,10 @@ class CallController {
     
     //Recieves vtt, removes unnecessary lines, and merges consecutive lines from the same speaker
     parseVTT(vttContent: string): string {
+        if (!vttContent.startsWith("WEBVTT")) {
+            return vttContent;
+        }
+
         // Split the content into blocks (separated by one or more blank lines)
         const blocks = vttContent.split(/\n\s*\n/).map(b => b.trim()).filter(b => b && !b.startsWith("WEBVTT"));
     
