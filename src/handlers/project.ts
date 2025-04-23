@@ -32,6 +32,21 @@ class ProjectHandler {
             next(err);
         }
     }
+
+    public async addProject(req: Request, res: Response, next: NextFunction){
+        try {
+            const {name, description = ''} = req.body;
+
+            if(!name){
+                throw new HttpException(400, "A name for the project is required")
+            }
+            const addedProject = await this.projectController.addProject(name, description)
+            res.status(201).json({message: "Project successfully added", addedProject: addedProject})
+
+        } catch(err) {
+            next(err);
+        }
+    }
 }
 
 export default ProjectHandler;

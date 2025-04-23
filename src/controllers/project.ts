@@ -1,3 +1,4 @@
+import HttpException from '../models/http-exception';
 import ProjectService from '../services/project';
 
 class ProjectController {
@@ -22,6 +23,15 @@ class ProjectController {
             return projects;
         } catch (err) {
             throw new Error("Error fetching user projects: " + err);
+        }
+    }
+
+    async addProject(projectName: string, projectDescription: string ){
+        try {
+            const addedProject = await this.projectService.addProject(projectName, projectDescription)
+            return addedProject;
+        } catch (err) {
+            throw new HttpException(500, "Error adding project: " + err);
         }
     }
 }

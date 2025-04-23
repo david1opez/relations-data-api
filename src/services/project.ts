@@ -33,6 +33,25 @@ class ProjectService {
             throw new HttpException(500, "Error fetching user projects" + err);
         }
     }
+
+    async addProject(name: string, description: string | undefined) {
+        try {
+          const project = await prisma.project.create({
+            data: {
+              name,
+              description,
+            },
+          });
+
+          return project;
+        } catch (err) {
+          if (err instanceof HttpException) {
+            throw err;
+          }
+          console.error("Error in addProject service:", err);
+          throw new HttpException(500, "Error adding project: " + err);
+        }
+      }
 }
 
 export default ProjectService;
