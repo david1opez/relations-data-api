@@ -12,5 +12,6 @@ router.get(
 );
 router.post("/projects", projectHandler.addProject.bind(projectHandler));
 router.delete("/projects/:id", projectHandler.deleteProject.bind(projectHandler));
+router.patch("/projects/:id/users", projectHandler.updateProjectUsers.bind(projectHandler));
 
 export default router;

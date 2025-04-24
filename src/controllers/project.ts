@@ -1,6 +1,6 @@
 import HttpException from '../models/http-exception';
 import ProjectService from '../services/project';
-import { CreateProjectDTO } from '../interfaces/projects';
+import { CreateProjectDTO, UpdateProjectUsersDTO } from '../interfaces/projects';
 
 class ProjectController {
     private projectService: ProjectService;
@@ -49,6 +49,19 @@ class ProjectController {
                 throw err;
             }
             throw new HttpException(500, "Error deleting project: " + err);
+        }
+    }
+
+    async updateProjectUsers(newProjectUsersData: UpdateProjectUsersDTO){
+
+        try {
+            const updatedProjectUsers = await this.projectService.updateProjectUsers(newProjectUsersData);
+            return updatedProjectUsers;
+        } catch (err){
+            if(err instanceof HttpException){
+                throw err;
+            }
+            throw new HttpException(500, "Error updating project users: " + err);
         }
     }
 }
