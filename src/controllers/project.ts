@@ -1,5 +1,6 @@
 import HttpException from '../models/http-exception';
 import ProjectService from '../services/project';
+import { CreateProjectDTO } from '../interfaces/projects';
 
 class ProjectController {
     private projectService: ProjectService;
@@ -26,11 +27,14 @@ class ProjectController {
         }
     }
 
-    async addProject(projectName: string, projectDescription: string ){
+    async addProject(createProjectData: CreateProjectDTO ){
         try {
-            const addedProject = await this.projectService.addProject(projectName, projectDescription)
+            const addedProject = await this.projectService.addProject(createProjectData)
             return addedProject;
         } catch (err) {
+            if (err instanceof HttpException){
+                throw err;
+            }
             throw new HttpException(500, "Error adding project: " + err);
         }
     }

@@ -1,6 +1,7 @@
 import ProjectController from "../controllers/project";
 import HttpException from "../models/http-exception";
 import { Request, Response, NextFunction } from "express";
+import { CreateProjectDTO } from "../interfaces/projects";
 
 class ProjectHandler {
     private projectController: ProjectController;
@@ -35,12 +36,17 @@ class ProjectHandler {
 
     public async addProject(req: Request, res: Response, next: NextFunction){
         try {
-            const {name, description = ''} = req.body;
+            const {name, description = '', users} = req.body;
+            const createProjectData: CreateProjectDTO = {
+                name: name, 
+                description: description,
+                users: users
+            }
 
             if(!name){
                 throw new HttpException(400, "A name for the project is required")
             }
-            const addedProject = await this.projectController.addProject(name, description)
+            const addedProject = await this.projectController.addProject(createProjectData)
             res.status(201).json({message: "Project successfully added", addedProject: addedProject})
 
         } catch(err) {

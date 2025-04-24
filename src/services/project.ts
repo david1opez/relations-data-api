@@ -1,5 +1,7 @@
+import { Project, User, UserProject } from "@prisma/client";
 import prisma from "../../client";
 import HttpException from "../models/http-exception";
+import { CreateProjectDTO } from "../interfaces/projects";
 
 class ProjectService {
     async getAllProjects() {
@@ -34,16 +36,59 @@ class ProjectService {
         }
     }
 
-    async addProject(name: string, description: string | undefined) {
+    async addProject(createProjectData: CreateProjectDTO) {
         try {
-          const project = await prisma.project.create({
-            data: {
-              name,
-              description,
-            },
+        
+          const {name, description, users} = createProjectData;
+
+          // Using an interactive transaction  
+          const newProject = await prisma.$transaction(async (tx) => {
+
+            // 1. Veryfing if users exist
+            const usersID: Array<number> = users.map(user => user.userID);
+            const foundUsers: Array<{userID: number}> = await tx.user.findMany({
+                where: {
+                    userID: {
+                        in: usersID,
+                    },
+                },
+                select: {
+                    userID: true,
+                }
+            });
+            if(usersID.length !== foundUsers.length){
+                throw new HttpException(400, "All users to assigned must exist")
+            }
+
+            // 2. Creation of the project
+            const project = await tx.project.create({
+                data: {
+                    name,
+                    description,
+                },
+            });
+
+            // 3. Data preparation for UserProject records
+            if (users && users.length > 0){
+                const userProjectData: Array<UserProject> = users.map(user => {
+                    return {
+                        userID: user.userID,
+                        projectID: project.projectID,
+                        projectRole: user.projectRole
+                    };
+                });
+
+                // 4. Cration of UserProject records
+                await tx.userProject.createMany({
+                    data: userProjectData,
+                });
+            } else{
+                throw new HttpException(400, "Bad request");
+            }
+            return project;
           });
 
-          return project;
+          return newProject;
         } catch (err) {
           if (err instanceof HttpException) {
             throw err;
