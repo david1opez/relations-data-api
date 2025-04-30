@@ -5,6 +5,7 @@ import userRouter from "./user";
 import Home from './Home';
 import deptRouter    from "./department";    
 import MicrosoftAuth from './MicrosoftAuth';
+import auditLogRouter from "./auditlog";
 
 const api = Router();
 
@@ -14,6 +15,7 @@ api.use("/user", userRouter);
 api.use("/department", deptRouter);        
 api.get("/", Home);
 api.post("/msft-auth", MicrosoftAuth);
+api.use("/auditlog", auditLogRouter);
 
 export default Router().use("/", api);
 
