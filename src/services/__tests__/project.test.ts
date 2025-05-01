@@ -13,8 +13,10 @@ describe('ProjectService', () => {
   describe('getAllProjects', () => {
     it('debe devolver todos los proyectos', async () => {
       const mockProjects = [
-        { projectID: 1, name: 'Project A', description: null },
-        { projectID: 2, name: 'Project B', description: 'Some desc' },
+        { projectID: 1, name: 'Project A', description: null, startDate: new Date('2025-06-01T10:00:00Z'),
+          endDate: new Date('2025-06-01T18:00:00Z'), },
+        { projectID: 2, name: 'Project B', description: 'Some desc', startDate: new Date('2025-06-01'),
+          endDate: new Date('2027-06-01'), },
       ];
       prismaMock.project.findMany.mockResolvedValue(mockProjects);
 

@@ -11,8 +11,8 @@ describe('ProjectController', () => {
     describe('getAllProjects', () => {
         it('should return all projects', async () => {
             const mockProjects = [
-                { projectID: 1, name: 'Project 1', description: 'Test project 1' },
-                { projectID: 2, name: 'Project 2', description: 'Test project 2' }
+                { projectID: 1, name: 'Project 1', description: 'Test project 1', startDate: null, endDate: null },
+                { projectID: 2, name: 'Project 2', description: 'Test project 2', startDate: null, endDate: null }
             ];
 
             prismaMock.project.findMany.mockResolvedValue(mockProjects);
@@ -39,13 +39,14 @@ describe('ProjectController', () => {
                     userID: 1,
                     projectID: 1,
                     projectRole: null,
-                    project: { projectID: 1, name: 'Project 1', description: 'Test project 1' }
+                    project: { projectID: 1, name: 'Project 1', description: 'Test project 1', startDate: new Date('2025-06-01T10:00:00Z'),
+                        endDate: new Date('2025-06-01T18:00:00Z'), }
                 },
                 {
                     userID: 1,
                     projectID: 2,
                     projectRole: null,
-                    project: { projectID: 2, name: 'Project 2', description: 'Test project 2' }
+                    project: { projectID: 2, name: 'Project 2', description: 'Test project 2', startDate: null, endDate: null }
                 }
             ];
 
