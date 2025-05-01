@@ -162,5 +162,70 @@ describe('ProjectController', () => {
               errorCode: 500,
             });
         });
+    });
+    
+    describe('updateProjectUsers', () => {
+      it('debe devolver los usuarios actualizados correctamente', async () => {
+        const controller = new ProjectController();
+    
+        const input = {
+          projectID: 1,
+          users: [
+            { userID: 1, projectRole: 'Member' },
+            { userID: 2, projectRole: 'Admin' },
+          ],
+        };
+    
+        const mockResponse = [
+          { userID: 1, projectID: 1, projectRole: 'Member' },
+          { userID: 2, projectID: 1, projectRole: 'Admin' },
+        ];
+    
+        jest
+          .spyOn(controller['projectService'], 'updateProjectUsers')
+          .mockResolvedValue(mockResponse);
+    
+        const result = await controller.updateProjectUsers(input);
+    
+        expect(result).toEqual(mockResponse);
+      });
+      it('debe propagar un HttpException si el servicio lo lanza', async () => {
+        const controller = new ProjectController();
+    
+        const input = {
+          projectID: 1,
+          users: [],
+        };
+    
+        const error = new HttpException(400, 'Bad request');
+    
+        jest
+          .spyOn(controller['projectService'], 'updateProjectUsers')
+          .mockRejectedValue(error);
+    
+        await expect(controller.updateProjectUsers(input)).rejects.toThrow(HttpException);
+        await expect(controller.updateProjectUsers(input)).rejects.toMatchObject({
+          errorCode: 400,
+        });
+      });
+      it('debe lanzar HttpException(500) si ocurre un error inesperado', async () => {
+        const controller = new ProjectController();
+    
+        const input = {
+          projectID: 1,
+          users: [],
+        };
+    
+        const unexpectedError = new Error('DB failure');
+    
+        jest
+          .spyOn(controller['projectService'], 'updateProjectUsers')
+          .mockRejectedValue(unexpectedError);
+    
+        await expect(controller.updateProjectUsers(input)).rejects.toThrow(HttpException);
+        await expect(controller.updateProjectUsers(input)).rejects.toMatchObject({
+          errorCode: 500,
+        });
+      });
     });        
 });
