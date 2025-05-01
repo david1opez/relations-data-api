@@ -182,7 +182,7 @@ describe('ProjectService', () => {
       const svc = new ProjectService();
       const projectID = 101;
   
-      const mockProject = { projectID, name: 'Proyecto X', description: 'Test' };
+      const mockProject = { projectID, name: 'Proyecto X', description: 'Test',   startDate: null, endDate: null};
   
       prismaMock.project.findUnique.mockResolvedValue(mockProject);
       prismaMock.project.delete.mockResolvedValue(mockProject);
@@ -211,7 +211,7 @@ describe('ProjectService', () => {
       const svc = new ProjectService();
       const projectID = 123;
   
-      prismaMock.project.findUnique.mockResolvedValue({ projectID, name: 'X', description: '' });
+      prismaMock.project.findUnique.mockResolvedValue({ projectID, name: 'X', description: '',  startDate: null, endDate: null});
       prismaMock.project.delete.mockRejectedValue(new Error('DB fail'));
   
       await expect(svc.deleteProject(projectID)).rejects.toThrow(HttpException);
