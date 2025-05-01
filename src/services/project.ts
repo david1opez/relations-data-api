@@ -124,90 +124,99 @@ class ProjectService {
     }
 
     async updateProjectUsers(newProjectUsersData: UpdateProjectUsersDTO) {
-        try {
-          const { projectID, users } = newProjectUsersData;
-      
-          const project = await prisma.project.findUnique({ where: { projectID } });
-          if (!project) {
-            throw new HttpException(404, `Project with ID ${projectID} not found`);
+      try {
+        const { projectID, users } = newProjectUsersData;
+
+        const userIDSet = new Set();
+        for (const user of users) {
+          if (userIDSet.has(user.userID)) {
+            throw new HttpException(400, 'Duplicate userID in request body');
           }
-      
-          const updatedProjectUsers = await prisma.$transaction(async (tx) => {
-            // 1. Verificar que los nuevos usuarios existan
-            const userIDs = users.map((user) => user.userID);
-            const foundUsers = await tx.user.findMany({
-              where: { userID: { in: userIDs } },
-              select: { userID: true },
-            });
-      
-            if (foundUsers.length !== userIDs.length) {
-              throw new HttpException(400, "All users to be assigned must exist");
-            }
-      
-            // 2. Obtener usuarios actuales del proyecto
-            const currentRelations = await tx.userProject.findMany({
-              where: { projectID },
-            });
-      
-            const currentUserIDs = currentRelations.map((rel) => rel.userID);
-      
-            // 3. Determinar acciones
-            const usersToAdd = users.filter(
-              (user) => !currentUserIDs.includes(user.userID)
-            );
-      
-            const usersToRemove = currentRelations.filter(
-              (rel) => !userIDs.includes(rel.userID)
-            );
-      
-            const usersToUpdate = users.filter((user) => {
-              const existing = currentRelations.find((rel) => rel.userID === user.userID);
-              return existing && existing.projectRole !== user.projectRole;
-            });
-      
-            // 4. Ejecutar operaciones
-            if (usersToAdd.length > 0) {
-              await tx.userProject.createMany({
-                data: usersToAdd.map((user) => ({
-                  userID: user.userID,
-                  projectID,
-                  projectRole: user.projectRole,
-                })),
-              });
-            }
-      
-            for (const user of usersToUpdate) {
-              await tx.userProject.update({
-                where: {
-                  userID_projectID: {
-                    userID: user.userID,
-                    projectID: projectID,
-                  },
-                },
-                data: {
-                  projectRole: user.projectRole,
-                },
-              });
-            }
-      
-            if (usersToRemove.length > 0) {
-              await tx.userProject.deleteMany({
-                where: {
-                  projectID,
-                  userID: { in: usersToRemove.map((u) => u.userID) },
-                },
-              });
-            }
-      
-            return await tx.userProject.findMany({ where: { projectID } });
-          });
-      
-          return updatedProjectUsers;
-        } catch (err) {
-          if (err instanceof HttpException) throw err;
-          console.error("Error in updateProjectUsers service: ", err);
-          throw new HttpException(500, "Error updating project users: " + err);
+          userIDSet.add(user.userID);
         }
+
+    
+        const project = await prisma.project.findUnique({ where: { projectID } });
+        if (!project) {
+          throw new HttpException(404, `Project with ID ${projectID} not found`);
+        }
+    
+        const updatedProjectUsers = await prisma.$transaction(async (tx) => {
+          // 1. Verificar que los nuevos usuarios existan
+          const userIDs = users.map((user) => user.userID);
+          const foundUsers = await tx.user.findMany({
+            where: { userID: { in: userIDs } },
+            select: { userID: true },
+          });
+    
+          if (foundUsers.length !== userIDs.length) {
+            throw new HttpException(400, "All users to be assigned must exist");
+          }
+    
+          // 2. Obtener usuarios actuales del proyecto
+          const currentRelations = await tx.userProject.findMany({
+            where: { projectID },
+          });
+    
+          const currentUserIDs = currentRelations.map((rel) => rel.userID);
+    
+          // 3. Determinar acciones
+          const usersToAdd = users.filter(
+            (user) => !currentUserIDs.includes(user.userID)
+          );
+    
+          const usersToRemove = currentRelations.filter(
+            (rel) => !userIDs.includes(rel.userID)
+          );
+    
+          const usersToUpdate = users.filter((user) => {
+            const existing = currentRelations.find((rel) => rel.userID === user.userID);
+            return existing && existing.projectRole !== user.projectRole;
+          });
+    
+          // 4. Ejecutar operaciones
+          if (usersToAdd.length > 0) {
+            await tx.userProject.createMany({
+              data: usersToAdd.map((user) => ({
+                userID: user.userID,
+                projectID,
+                projectRole: user.projectRole,
+              })),
+            });
+          }
+    
+          for (const user of usersToUpdate) {
+            await tx.userProject.update({
+              where: {
+                userID_projectID: {
+                  userID: user.userID,
+                  projectID: projectID,
+                },
+              },
+              data: {
+                projectRole: user.projectRole,
+              },
+            });
+          }
+    
+          if (usersToRemove.length > 0) {
+            await tx.userProject.deleteMany({
+              where: {
+                projectID,
+                userID: { in: usersToRemove.map((u) => u.userID) },
+              },
+            });
+          }
+    
+          return await tx.userProject.findMany({ where: { projectID } });
+        });
+    
+        return updatedProjectUsers;
+      } catch (err) {
+        if (err instanceof HttpException) throw err;
+        console.error("Error in updateProjectUsers service: ", err);
+        throw new HttpException(500, "Error updating project users: " + err);
+      }
     }      
 }
 
