@@ -176,4 +176,48 @@ describe('ProjectService', () => {
       await expect(svc.addProject(input)).rejects.toThrow(HttpException);
     });    
   });  
+
+  describe('deleteProject', () => {
+    it('debe eliminar el proyecto si existe', async () => {
+      const svc = new ProjectService();
+      const projectID = 101;
+  
+      const mockProject = { projectID, name: 'Proyecto X', description: 'Test' };
+  
+      prismaMock.project.findUnique.mockResolvedValue(mockProject);
+      prismaMock.project.delete.mockResolvedValue(mockProject);
+  
+      const result = await svc.deleteProject(projectID);
+  
+      expect(result).toEqual(mockProject);
+      expect(prismaMock.project.findUnique).toHaveBeenCalledWith({ where: { projectID } });
+      expect(prismaMock.project.delete).toHaveBeenCalledWith({ where: { projectID } });
+    });
+    it('debe lanzar HttpException(404) si el proyecto no existe', async () => {
+      const svc = new ProjectService();
+      const projectID = 404;
+  
+      prismaMock.project.findUnique.mockResolvedValue(null); // no encontrado
+  
+      await expect(svc.deleteProject(projectID)).rejects.toThrow(HttpException);
+      await expect(svc.deleteProject(projectID)).rejects.toMatchObject({
+        errorCode: 404,
+        message: `Project with ID ${projectID} not found`,
+      });
+  
+      expect(prismaMock.project.delete).not.toHaveBeenCalled();
+    });
+    it('debe lanzar HttpException(500) si ocurre un error inesperado', async () => {
+      const svc = new ProjectService();
+      const projectID = 123;
+  
+      prismaMock.project.findUnique.mockResolvedValue({ projectID, name: 'X', description: '' });
+      prismaMock.project.delete.mockRejectedValue(new Error('DB fail'));
+  
+      await expect(svc.deleteProject(projectID)).rejects.toThrow(HttpException);
+      await expect(svc.deleteProject(projectID)).rejects.toMatchObject({
+        errorCode: 500,
+      });
+    });
+  });      
 });
