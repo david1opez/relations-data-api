@@ -113,4 +113,81 @@ describe('ProjectHandler', () => {
       expect(nextFunction).toHaveBeenCalledWith(err);
     });
   });
+
+  describe('addProject', () => {
+    it('debe responder con 201 cuando se agrega un proyecto exitosamente', async () => {
+      const input = {
+        name: 'Proyecto X',
+        description: 'Descripción',
+        users: [{ userID: 1, projectRole: 'Owner' }]
+      };
+  
+      const mockAddedProject = {
+        project: { projectID: 123, name: input.name, description: input.description },
+        assignedUsers: input.users,
+      };
+  
+      mockRequest = { body: input };
+  
+      jest
+        .spyOn(projectHandler['projectController'], 'addProject')
+        .mockResolvedValue(mockAddedProject as any);
+  
+      await projectHandler.addProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      );
+  
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        message: 'Project successfully added',
+        addedProject: mockAddedProject,
+      });
+      expect(nextFunction).not.toHaveBeenCalled();
+    });
+    it('debe lanzar HttpException(400) si no se proporciona el nombre del proyecto', async () => {
+      mockRequest = {
+        body: {
+          description: 'Proyecto sin nombre',
+          users: [],
+        },
+      };
+  
+      await projectHandler.addProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      );
+  
+      expect(nextFunction).toHaveBeenCalled();
+      const err = nextFunction.mock.calls[0][0] as HttpException;
+      expect(err).toBeInstanceOf(HttpException);
+      expect(err.errorCode).toBe(400);
+      expect(err.message).toBe('A name for the project is required');
+    });
+    it('debe llamar next(err) si el controller lanza un error', async () => {
+      mockRequest = {
+        body: {
+          name: 'Proyecto Y',
+          description: '',
+          users: [],
+        },
+      };
+  
+      const err = new Error('Controller failed');
+  
+      jest
+        .spyOn(projectHandler['projectController'], 'addProject')
+        .mockRejectedValue(err);
+  
+      await projectHandler.addProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      );
+  
+      expect(nextFunction).toHaveBeenCalledWith(err);
+    });
+  });      
 });
