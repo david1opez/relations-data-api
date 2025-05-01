@@ -39,6 +39,11 @@ class ProjectService {
     async addProject(createProjectData: CreateProjectDTO) {
         try {
           const { name, description, users } = createProjectData;
+
+          if (!name || name.trim() === '') {
+            throw new HttpException(400, 'Project name is required');
+          }
+          
       
           const newProject = await prisma.$transaction(async (tx) => {
             // 1. Si hay usuarios, verificar si existen
