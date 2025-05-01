@@ -58,4 +58,120 @@ describe('ProjectService', () => {
       await expect(svc.getUserProjects(1)).rejects.toThrow(HttpException);
     });
   });
+
+  describe('addProject', () => {
+    it('debe crear un proyecto con usuarios válidos', async () => {
+      const svc = new ProjectService();
+    
+      const mockUsers = [{ userID: 1, projectRole: 'Owner' }, { userID: 2, projectRole: 'Member' }];
+      const input = {
+        name: 'Nuevo Proyecto',
+        description: 'Proyecto de prueba',
+        users: mockUsers,
+      };
+    
+      const mockProject = {
+        projectID: 123,
+        name: input.name,
+        description: input.description,
+      };
+    
+      prismaMock.$transaction.mockImplementation(async (callback: any) => {
+        return await callback({
+          user: {
+            findMany: jest.fn().mockResolvedValue([{ userID: 1 }, { userID: 2 }]),
+          },
+          project: {
+            create: jest.fn().mockResolvedValue(mockProject),
+          },
+          userProject: {
+            createMany: jest.fn().mockResolvedValue({ count: 2 }),
+          },
+        });
+      });
+    
+      const result = await svc.addProject(input);
+    
+      expect(result).toEqual({
+        project: mockProject,
+        assignedUsers: mockUsers,
+      });
+    });
+    
+    it('debe crear un proyecto sin usuarios asignados', async () => {
+      const svc = new ProjectService();
+    
+      const input = {
+        name: 'Proyecto Solo',
+        description: 'Sin usuarios',
+        users: [],
+      };
+    
+      const mockProject = {
+        projectID: 99,
+        name: input.name,
+        description: input.description,
+      };
+    
+      prismaMock.$transaction.mockImplementation(async (callback:any) => {
+        return await callback({
+          user: {
+            findMany: jest.fn(),
+          },
+          project: {
+            create: jest.fn().mockResolvedValue(mockProject),
+          },
+          userProject: {
+            createMany: jest.fn(),
+          },
+        });
+      });
+    
+      const result = await svc.addProject(input);
+    
+      expect(result).toEqual({
+        project: mockProject,
+        assignedUsers: [],
+      });
+    });
+
+    it('debe lanzar HttpException(400) si falta el nombre del proyecto', async () => {
+      const svc = new ProjectService();
+    
+      const input = {
+        // name: '', <- omitido
+        description: 'desc',
+        users: [],
+      } as any; // forzamos un DTO incompleto
+    
+      await expect(svc.addProject(input)).rejects.toThrow(HttpException);
+    });
+    
+
+    it('debe lanzar HttpException(400) si algún usuario no existe', async () => {
+      const svc = new ProjectService();
+    
+      const input = {
+        name: 'Proyecto parcial',
+        description: 'desc',
+        users: [{ userID: 1, projectRole: 'Owner' }, { userID: 99, projectRole: 'Member' }],
+      };
+    
+      prismaMock.$transaction.mockImplementation(async (callback:any) => {
+        return await callback({
+          user: {
+            findMany: jest.fn().mockResolvedValue([{ userID: 1 }]), // solo encontró uno
+          },
+          project: {
+            create: jest.fn(),
+          },
+          userProject: {
+            createMany: jest.fn(),
+          },
+        });
+      });
+    
+      await expect(svc.addProject(input)).rejects.toThrow(HttpException);
+    });    
+  });  
 });
