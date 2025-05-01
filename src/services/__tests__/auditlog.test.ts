@@ -173,6 +173,8 @@ describe("AuditLogService", () => {
         projectID: 1,
         name: "Test Project",
         description: null,
+        startDate: null,
+        endDate: null,
       }
 
       const mockUserProjects = [
@@ -246,6 +248,8 @@ describe("AuditLogService", () => {
         projectID: 1,
         name: "Test Project",
         description: null,
+        startDate: null,
+        endDate: null,
       }
 
       prismaMock.project.findUnique.mockResolvedValue(mockProject)
