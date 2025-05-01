@@ -118,5 +118,49 @@ describe('ProjectController', () => {
     
         await expect(projectController.addProject(input)).rejects.toThrow(HttpException);
         });
-    });      
+    });
+    
+    describe('deleteProject', () => {
+        it('debe eliminar el proyecto si el servicio lo elimina correctamente', async () => {
+          const projectID = 123;
+          const mockDeleted = { projectID, name: 'X', description: 'Desc' };
+      
+          const controller = new ProjectController();
+          jest
+            .spyOn(controller['projectService'], 'deleteProject')
+            .mockResolvedValue(mockDeleted);
+      
+          const result = await controller.deleteProject(projectID);
+      
+          expect(result).toEqual(mockDeleted);
+        });
+        it('debe propagar HttpException(404) si el servicio lo lanza', async () => {
+            const projectID = 404;
+            const err = new HttpException(404, 'Not found');
+        
+            const controller = new ProjectController();
+            jest
+              .spyOn(controller['projectService'], 'deleteProject')
+              .mockRejectedValue(err);
+        
+            await expect(controller.deleteProject(projectID)).rejects.toThrow(HttpException);
+            await expect(controller.deleteProject(projectID)).rejects.toMatchObject({
+              errorCode: 404,
+            });
+        });
+        it('debe lanzar HttpException(500) si ocurre un error inesperado', async () => {
+            const projectID = 123;
+            const err = new Error('DB fail');
+        
+            const controller = new ProjectController();
+            jest
+              .spyOn(controller['projectService'], 'deleteProject')
+              .mockRejectedValue(err);
+        
+            await expect(controller.deleteProject(projectID)).rejects.toThrow(HttpException);
+            await expect(controller.deleteProject(projectID)).rejects.toMatchObject({
+              errorCode: 500,
+            });
+        });
+    });        
 });
