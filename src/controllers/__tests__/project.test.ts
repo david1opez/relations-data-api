@@ -80,7 +80,7 @@ describe('ProjectController', () => {
           };
       
           const mockResult = {
-            project: { projectID: 10, name: 'Proyecto Test', description: 'Descripción' },
+            project: { projectID: 10, name: 'Proyecto Test', description: 'Descripción', startDate: null, endDate: null },
             assignedUsers: input.users
           };
       
@@ -123,7 +123,7 @@ describe('ProjectController', () => {
     describe('deleteProject', () => {
         it('debe eliminar el proyecto si el servicio lo elimina correctamente', async () => {
           const projectID = 123;
-          const mockDeleted = { projectID, name: 'X', description: 'Desc' };
+          const mockDeleted = { projectID, name: 'X', description: 'Desc', startDate: null, endDate: null};
       
           const controller = new ProjectController();
           jest
