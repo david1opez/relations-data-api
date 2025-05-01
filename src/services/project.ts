@@ -41,7 +41,7 @@ class ProjectService {
           const { name, description, users } = createProjectData;
 
           if (!name || name.trim() === '') {
-            throw new HttpException(400, 'Project name is required');
+            throw new HttpException(400, 'A name for the project is required');
           }
           
       
