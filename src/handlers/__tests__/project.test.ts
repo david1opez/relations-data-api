@@ -189,5 +189,68 @@ describe('ProjectHandler', () => {
   
       expect(nextFunction).toHaveBeenCalledWith(err);
     });
+  });   
+  
+  describe('deleteProject', () => {
+    it('debe responder con 202 cuando el proyecto se elimina exitosamente', async () => {
+      const projectID = 123;
+      const mockDeleted = { projectID, name: 'Test', description: '' };
+  
+      mockRequest = {
+        params: { id: String(projectID) },
+      };
+  
+      jest
+        .spyOn(projectHandler['projectController'], 'deleteProject')
+        .mockResolvedValue(mockDeleted);
+  
+      await projectHandler.deleteProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      );
+  
+      expect(mockResponse.status).toHaveBeenCalledWith(202);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        message: 'Project successfully eliminated',
+        deletedProject: mockDeleted,
+      });
+      expect(nextFunction).not.toHaveBeenCalled();
+    });
+    it('debe lanzar HttpException(400) si no se proporciona projectID', async () => {
+      mockRequest = { params: {} };
+  
+      await projectHandler.deleteProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      );
+  
+      expect(nextFunction).toHaveBeenCalled();
+      const err = nextFunction.mock.calls[0][0] as HttpException;
+      expect(err).toBeInstanceOf(HttpException);
+      expect(err.errorCode).toBe(400);
+      expect(err.message).toBe('Project ID is required');
+    });
+    it('debe llamar next(err) si el controller lanza un error', async () => {
+      const projectID = 999;
+      const err = new Error('Fallo interno');
+  
+      mockRequest = {
+        params: { id: String(projectID) },
+      };
+  
+      jest
+        .spyOn(projectHandler['projectController'], 'deleteProject')
+        .mockRejectedValue(err);
+  
+      await projectHandler.deleteProject(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      );
+  
+      expect(nextFunction).toHaveBeenCalledWith(err);
+    });
   });      
 });
