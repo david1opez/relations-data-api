@@ -123,78 +123,92 @@ class ProjectService {
         }
     }
 
-    async updateProjectUsers(newProjectUsersData: UpdateProjectUsersDTO){
-        try{
-            const {projectID, users} = newProjectUsersData;
-            const project = await prisma.project.findUnique({where: {projectID: projectID}});
-            
-            if(!project){
-                throw new HttpException(404, `Project with ID ${projectID} not found`);
-            }
-
-        
-            // Using an interactive transaction 
-            const updatedProjectUsers = await prisma.$transaction(async (tx) => {
-
-                 // 1. Veryfing if users exist
-                const usersID: Array<number> = users.map(user => user.userID);
-                const foundUsers: Array<{userID: number}> = await tx.user.findMany({
-                    where: {
-                        userID: {
-                            in: usersID,
-                        },
-                    },
-                    select: {
-                        userID: true,
-                    }
-                });
-                if(usersID.length !== foundUsers.length){
-                    throw new HttpException(400, "All users to be assigned must exist")
-                }
-
-                // 2. Deleting old UserProject assignments within the Project
-                await tx.userProject.deleteMany({
-                    where: {
-                        projectID: projectID,
-                    }
-                });
-                // 3. Data preparation for UserProject records
-                if (users && users.length > 0){
-                    const userProjectData: Array<UserProject> = users.map(user => {
-                        return {
-                            userID: user.userID,
-                            projectID: projectID,
-                            projectRole: user.projectRole
-                        };
-                    });
-
-                // 4. Cration of UserProject records
-                await tx.userProject.createMany({
-                    data: userProjectData,
-                });
-
-                const newProjectUserRecords: Array<UserProject> = await tx.userProject.findMany({
-                    where: {
-                        projectID: projectID
-                    }
-                });
-
-                return newProjectUserRecords;
-
-                } else{
-                    throw new HttpException(400, "Bad request");
-                }
+    async updateProjectUsers(newProjectUsersData: UpdateProjectUsersDTO) {
+        try {
+          const { projectID, users } = newProjectUsersData;
+      
+          const project = await prisma.project.findUnique({ where: { projectID } });
+          if (!project) {
+            throw new HttpException(404, `Project with ID ${projectID} not found`);
+          }
+      
+          const updatedProjectUsers = await prisma.$transaction(async (tx) => {
+            // 1. Verificar que los nuevos usuarios existan
+            const userIDs = users.map((user) => user.userID);
+            const foundUsers = await tx.user.findMany({
+              where: { userID: { in: userIDs } },
+              select: { userID: true },
             });
-
-            return updatedProjectUsers;
-        } catch(err){
-            if (err instanceof HttpException) {
-                throw err;
+      
+            if (foundUsers.length !== userIDs.length) {
+              throw new HttpException(400, "All users to be assigned must exist");
             }
-            console.error("Error in updateProjectUsers service: ", err);
-            throw new HttpException(500, "Error updating project users: " + err);
+      
+            // 2. Obtener usuarios actuales del proyecto
+            const currentRelations = await tx.userProject.findMany({
+              where: { projectID },
+            });
+      
+            const currentUserIDs = currentRelations.map((rel) => rel.userID);
+      
+            // 3. Determinar acciones
+            const usersToAdd = users.filter(
+              (user) => !currentUserIDs.includes(user.userID)
+            );
+      
+            const usersToRemove = currentRelations.filter(
+              (rel) => !userIDs.includes(rel.userID)
+            );
+      
+            const usersToUpdate = users.filter((user) => {
+              const existing = currentRelations.find((rel) => rel.userID === user.userID);
+              return existing && existing.projectRole !== user.projectRole;
+            });
+      
+            // 4. Ejecutar operaciones
+            if (usersToAdd.length > 0) {
+              await tx.userProject.createMany({
+                data: usersToAdd.map((user) => ({
+                  userID: user.userID,
+                  projectID,
+                  projectRole: user.projectRole,
+                })),
+              });
+            }
+      
+            for (const user of usersToUpdate) {
+              await tx.userProject.update({
+                where: {
+                  userID_projectID: {
+                    userID: user.userID,
+                    projectID: projectID,
+                  },
+                },
+                data: {
+                  projectRole: user.projectRole,
+                },
+              });
+            }
+      
+            if (usersToRemove.length > 0) {
+              await tx.userProject.deleteMany({
+                where: {
+                  projectID,
+                  userID: { in: usersToRemove.map((u) => u.userID) },
+                },
+              });
+            }
+      
+            return await tx.userProject.findMany({ where: { projectID } });
+          });
+      
+          return updatedProjectUsers;
+        } catch (err) {
+          if (err instanceof HttpException) throw err;
+          console.error("Error in updateProjectUsers service: ", err);
+          throw new HttpException(500, "Error updating project users: " + err);
         }
-    }
+    }      
 }
 
 export default ProjectService;

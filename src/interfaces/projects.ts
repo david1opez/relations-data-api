@@ -6,5 +6,5 @@ export interface CreateProjectDTO{
 
 export interface UpdateProjectUsersDTO{
     projectID: number,
-    users: Array<{userID: number, projectRole: string}>
+    users: Array<{userID: number, projectRole?: string}>
 };
