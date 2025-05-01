@@ -194,7 +194,7 @@ describe('ProjectHandler', () => {
   describe('deleteProject', () => {
     it('debe responder con 202 cuando el proyecto se elimina exitosamente', async () => {
       const projectID = 123;
-      const mockDeleted = { projectID, name: 'Test', description: '' };
+      const mockDeleted = { projectID, name: 'Test', description: '', startDate: null, endDate: null};
   
       mockRequest = {
         params: { id: String(projectID) },
