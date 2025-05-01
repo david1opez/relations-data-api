@@ -1,5 +1,6 @@
 import ProjectController from '../project';
 import { prismaMock } from '../../../tests/prismaTestClient';
+import HttpException from '../../models/http-exception';
 
 describe('ProjectController', () => {
     let projectController: ProjectController;
@@ -68,4 +69,53 @@ describe('ProjectController', () => {
             await expect(projectController.getUserProjects(userID)).rejects.toThrow('Error fetching user projects');
         });
     });
+    
+    describe('addProject', () => {
+        it('debe retornar el proyecto agregado cuando el servicio funciona', async () => {
+          const input = {
+            name: 'Proyecto Test',
+            description: 'Descripción',
+            users: [{ userID: 1, projectRole: 'Owner' }]
+          };
+      
+          const mockResult = {
+            project: { projectID: 10, name: 'Proyecto Test', description: 'Descripción' },
+            assignedUsers: input.users
+          };
+      
+          // Mock del método del servicio
+          const spy = jest.spyOn(projectController['projectService'], 'addProject').mockResolvedValue(mockResult);
+      
+          const result = await projectController.addProject(input);
+      
+          expect(result).toEqual(mockResult);
+          expect(spy).toHaveBeenCalledWith(input);
+        });
+        it('debe propagar HttpException si el servicio lanza una excepción controlada', async () => {
+            const input = {
+              name: 'Proyecto inválido',
+              description: 'Descripción',
+              users: []
+            };
+        
+            const error = new HttpException(400, 'Error controlado');
+        
+            jest.spyOn(projectController['projectService'], 'addProject').mockRejectedValue(error);
+        
+            await expect(projectController.addProject(input)).rejects.toThrow(HttpException);
+          });
+        it('debe lanzar HttpException(500) si ocurre un error inesperado', async () => {
+        const input = {
+            name: 'Proyecto con error',
+            description: 'Descripción',
+            users: []
+        };
+    
+        const error = new Error('DB falla');
+    
+        jest.spyOn(projectController['projectService'], 'addProject').mockRejectedValue(error);
+    
+        await expect(projectController.addProject(input)).rejects.toThrow(HttpException);
+        });
+    });      
 });
