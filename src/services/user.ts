@@ -1,5 +1,6 @@
 import prisma from "../../client"
 import HttpException from "../models/http-exception"
+import type { UpdateUserDTO } from "../interfaces/user"
 
 class UserService {
   async checkLogin(userID: number, password: string) {
@@ -77,6 +78,46 @@ class UserService {
         throw err
       }
       throw new HttpException(500, "Error creating user: " + err)
+    }
+  }
+
+  async updateUser(userID: number, userData: UpdateUserDTO) {
+    try {
+      // Check if user exists
+      const existingUser = await prisma.user.findUnique({
+        where: { userID: userID },
+      })
+
+      if (!existingUser) {
+        throw new HttpException(404, "User not found")
+      }
+
+      // If email is being updated, check if it's already in use by another user
+      if (userData.email && userData.email !== existingUser.email) {
+        const userWithEmail = await prisma.user.findUnique({
+          where: { email: userData.email },
+        })
+
+        if (userWithEmail && userWithEmail.userID !== userID) {
+          throw new HttpException(409, "Email is already in use by another user")
+        }
+      }
+
+      // Update user
+      const updatedUser = await prisma.user.update({
+        where: { userID: userID },
+        data: userData,
+        include: {
+          department: true,
+        },
+      })
+
+      return updatedUser
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err
+      }
+      throw new HttpException(500, "Error updating user: " + err)
     }
   }
 

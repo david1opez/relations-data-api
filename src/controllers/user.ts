@@ -1,4 +1,5 @@
 import UserService from "../services/user"
+import type { UpdateUserDTO } from "../interfaces/user"
 
 class UserController {
   private userService: UserService
@@ -40,6 +41,15 @@ class UserController {
       return user
     } catch (err) {
       throw new Error("Error creating user: " + err)
+    }
+  }
+
+  async updateUser(userID: number, userData: UpdateUserDTO) {
+    try {
+      const user = await this.userService.updateUser(userID, userData)
+      return user
+    } catch (err) {
+      throw new Error("Error updating user: " + err)
     }
   }
 

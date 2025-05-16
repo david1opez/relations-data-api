@@ -1,6 +1,7 @@
 import UserController from "../controllers/user"
 import HttpException from "../models/http-exception"
 import type { Request, Response, NextFunction } from "express"
+import type { UpdateUserDTO } from "../interfaces/user"
 
 class UserHandler {
   private userController: UserController
@@ -96,6 +97,52 @@ class UserHandler {
 
       const user = await this.userController.createUser(userData)
       res.status(201).json(user)
+    } catch (err) {
+      next(err)
+    }
+  }
+  public async updateUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { userID } = req.params
+      const { name, email, password, role, departmentID } = req.body
+
+      if (!userID) {
+        throw new HttpException(400, "User ID is required")
+      }
+
+      const userIDInt = Number.parseInt(userID)
+      if (isNaN(userIDInt)) {
+        throw new HttpException(400, "User ID must be a number")
+      }
+
+      // Validate email format if provided
+      if (email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(email)) {
+          throw new HttpException(400, "Invalid email format")
+        }
+      }
+
+      // Convert departmentID to number if provided
+      let departmentIDInt: number | undefined = undefined
+      if (departmentID) {
+        departmentIDInt = Number.parseInt(departmentID as string)
+        if (isNaN(departmentIDInt)) {
+          throw new HttpException(400, "Department ID must be a number")
+        }
+      }
+
+      const userData: UpdateUserDTO = {}
+
+      // Only include fields that are provided
+      if (name !== undefined) userData.name = name
+      if (email !== undefined) userData.email = email
+      if (password !== undefined) userData.password = password
+      if (role !== undefined) userData.role = role
+      if (departmentIDInt !== undefined) userData.departmentID = departmentIDInt
+
+      const user = await this.userController.updateUser(userIDInt, userData)
+      res.status(200).json(user)
     } catch (err) {
       next(err)
     }
