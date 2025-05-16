@@ -69,19 +69,33 @@ class ProjectHandler {
         }
     }
 
-    public async updateProjectUsers(req: Request, res: Response, next: NextFunction){
+    public async updateProjectUsers(req: Request, res: Response, next: NextFunction) {
         try {
-            const {users}  = req.body;
-            const {id: notParsedProjectID} = req.params;
-            const projectID = parseInt(notParsedProjectID, 10);
-            const updateProjectUsersData: UpdateProjectUsersDTO = {projectID, users};
-
-            const updatedProjectUsers = await this.projectController.updateProjectUsers(updateProjectUsersData);
-            res.status(200).json({message: `Users of Project ID ${projectID} succesfully updated`, users: updatedProjectUsers});
-        } catch(err){
-            next(err);
+          const { users } = req.body
+          const { id: notParsedProjectID } = req.params
+    
+          if (!notParsedProjectID) {
+            throw new HttpException(400, "Project ID is required")
+          }
+    
+          if (!users || !Array.isArray(users)) {
+            throw new HttpException(400, "Users array is required")
+          }
+    
+          const projectID = Number.parseInt(notParsedProjectID, 10)
+          if (isNaN(projectID)) {
+            throw new HttpException(400, "Project ID must be a valid number")
+          }
+    
+          const updateProjectUsersData: UpdateProjectUsersDTO = { projectID, users }
+    
+          const updatedProjectUsers = await this.projectController.updateProjectUsers(updateProjectUsersData)
+          res
+            .status(200)
+            .json({ message: `Users of Project ID ${projectID} successfully updated`, users: updatedProjectUsers })
+        } catch (err) {
+          next(err)
         }
+      }
     }
-}
-
 export default ProjectHandler;

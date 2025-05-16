@@ -118,78 +118,92 @@ class ProjectService {
         }
     }
 
-    async updateProjectUsers(newProjectUsersData: UpdateProjectUsersDTO){
-        try{
-            const {projectID, users} = newProjectUsersData;
-            const project = await prisma.project.findUnique({where: {projectID: projectID}});
-            
-            if(!project){
-                throw new HttpException(404, `Project with ID ${projectID} not found`);
+    async updateProjectUsers(newProjectUsersData: UpdateProjectUsersDTO) {
+        try {
+          const { projectID, users } = newProjectUsersData
+    
+          // Verify the project exists
+          const project = await prisma.project.findUnique({ where: { projectID: projectID } })
+    
+          if (!project) {
+            throw new HttpException(404, `Project with ID ${projectID} not found`)
+          }
+    
+          // Using an interactive transaction
+          const updatedProjectUsers = await prisma.$transaction(async (tx) => {
+            // 1. Verify if users exist
+            if (users && users.length > 0) {
+              const usersID: Array<number> = users.map((user) => user.userID)
+              const foundUsers: Array<{ userID: number }> = await tx.user.findMany({
+                where: {
+                  userID: {
+                    in: usersID,
+                  },
+                },
+                select: {
+                  userID: true,
+                },
+              })
+    
+              if (usersID.length !== foundUsers.length) {
+                throw new HttpException(400, "All users to be assigned must exist")
+              }
             }
-
-        
-            // Using an interactive transaction 
-            const updatedProjectUsers = await prisma.$transaction(async (tx) => {
-
-                 // 1. Veryfing if users exist
-                const usersID: Array<number> = users.map(user => user.userID);
-                const foundUsers: Array<{userID: number}> = await tx.user.findMany({
-                    where: {
-                        userID: {
-                            in: usersID,
-                        },
-                    },
-                    select: {
-                        userID: true,
-                    }
-                });
-                if(usersID.length !== foundUsers.length){
-                    throw new HttpException(400, "All users to be assigned must exist")
-                }
-
-                // 2. Deleting old UserProject assignments within the Project
-                await tx.userProject.deleteMany({
-                    where: {
-                        projectID: projectID,
-                    }
-                });
-                // 3. Data preparation for UserProject records
-                if (users && users.length > 0){
-                    const userProjectData: Array<UserProject> = users.map(user => {
-                        return {
-                            userID: user.userID,
-                            projectID: projectID,
-                            projectRole: user.projectRole
-                        };
-                    });
-
-                // 4. Cration of UserProject records
-                await tx.userProject.createMany({
-                    data: userProjectData,
-                });
-
-                const newProjectUserRecords: Array<UserProject> = await tx.userProject.findMany({
-                    where: {
-                        projectID: projectID
-                    }
-                });
-
-                return newProjectUserRecords;
-
-                } else{
-                    throw new HttpException(400, "Bad request");
-                }
-            });
-
-            return updatedProjectUsers;
-        } catch(err){
-            if (err instanceof HttpException) {
-                throw err;
+    
+            // 2. Delete existing UserProject assignments for this project
+            await tx.userProject.deleteMany({
+              where: {
+                projectID: projectID,
+              },
+            })
+    
+            // 3. If no users are provided, just remove all assignments
+            if (!users || users.length === 0) {
+              return []
             }
-            console.error("Error in updateProjectUsers service: ", err);
-            throw new HttpException(500, "Error updating project users: " + err);
+    
+            // 4. Prepare data for UserProject records
+            const userProjectData = users.map((user) => {
+              return {
+                userID: user.userID,
+                projectID: projectID,
+                projectRole: user.projectRole || null,
+              }
+            })
+    
+            // 5. Create new UserProject records
+            await tx.userProject.createMany({
+              data: userProjectData,
+            })
+    
+            // 6. Return the new UserProject records
+            const newProjectUserRecords = await tx.userProject.findMany({
+              where: {
+                projectID: projectID,
+              },
+              include: {
+                user: {
+                  select: {
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+            })
+    
+            return newProjectUserRecords
+          })
+    
+          return updatedProjectUsers
+        } catch (err) {
+          if (err instanceof HttpException) {
+            throw err
+          }
+          console.error("Error in updateProjectUsers service: ", err)
+          throw new HttpException(500, "Error updating project users: " + err)
         }
+      }
     }
-}
+    
 
 export default ProjectService;
