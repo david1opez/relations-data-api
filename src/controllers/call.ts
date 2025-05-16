@@ -98,9 +98,9 @@ class CallController {
         try {        
             const call = await this.callService.getCall(callID);
 
-            if (call.summary) {
-                call.summary = this.parseVTT(call.summary); 
-            }
+            //if (call.summary) {
+             //   call.summary = this.parseVTT(call.summary); 
+            //}
 
             return call;
         } catch (err) {
