@@ -30,7 +30,10 @@ describe('CallHandler', () => {
             );
 
             expect(nextFunction).toHaveBeenCalledWith(
-                expect.any(HttpException)
+                expect.objectContaining({
+                    errorCode: 400,
+                    message: 'Project ID is required'
+                })
             );
         });
 
@@ -71,7 +74,10 @@ describe('CallHandler', () => {
             );
 
             expect(nextFunction).toHaveBeenCalledWith(
-                expect.any(HttpException)
+                expect.objectContaining({
+                    errorCode: 400,
+                    message: 'Call ID is required'
+                })
             );
         });
 

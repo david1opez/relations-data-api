@@ -12,8 +12,30 @@ describe('ProjectController', () => {
     describe('getAllProjects', () => {
         it('should return all projects', async () => {
             const mockProjects = [
-                { projectID: 1, name: 'Project 1', description: 'Test project 1', startDate: null, endDate: null },
-                { projectID: 2, name: 'Project 2', description: 'Test project 2', startDate: null, endDate: null }
+                { 
+                    projectID: 1, 
+                    name: 'Project 1', 
+                    description: 'Test project 1', 
+                    startDate: null, 
+                    endDate: null,
+                    reports: [
+                        {
+                            reportID: 1,
+                            reportType: 'Summary',
+                            generatedAt: new Date('2025-06-01T13:00:00Z'),
+                            fileURL: 'http://example.com/report1.pdf',
+                            format: 'PDF'
+                        }
+                    ]
+                },
+                { 
+                    projectID: 2, 
+                    name: 'Project 2', 
+                    description: 'Test project 2', 
+                    startDate: null, 
+                    endDate: null,
+                    reports: []
+                }
             ];
 
             prismaMock.project.findMany.mockResolvedValue(mockProjects);
@@ -40,14 +62,35 @@ describe('ProjectController', () => {
                     userID: 1,
                     projectID: 1,
                     projectRole: null,
-                    project: { projectID: 1, name: 'Project 1', description: 'Test project 1', startDate: new Date('2025-06-01T10:00:00Z'),
-                        endDate: new Date('2025-06-01T18:00:00Z'), }
+                    project: { 
+                        projectID: 1, 
+                        name: 'Project 1', 
+                        description: 'Test project 1', 
+                        startDate: new Date('2025-06-01T10:00:00Z'),
+                        endDate: new Date('2025-06-01T18:00:00Z'),
+                        reports: [
+                            {
+                                reportID: 1,
+                                reportType: 'Progress',
+                                generatedAt: new Date('2025-06-01T15:00:00Z'),
+                                fileURL: 'http://example.com/progress1.pdf',
+                                format: 'PDF'
+                            }
+                        ]
+                    }
                 },
                 {
                     userID: 1,
                     projectID: 2,
                     projectRole: null,
-                    project: { projectID: 2, name: 'Project 2', description: 'Test project 2', startDate: null, endDate: null }
+                    project: { 
+                        projectID: 2, 
+                        name: 'Project 2', 
+                        description: 'Test project 2', 
+                        startDate: null, 
+                        endDate: null,
+                        reports: []
+                    }
                 }
             ];
 
