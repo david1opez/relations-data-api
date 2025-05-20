@@ -6,7 +6,11 @@ import { CreateProjectDTO, UpdateProjectUsersDTO } from "../interfaces/projects"
 class ProjectService {
     async getAllProjects() {
         try {
-            const projects = await prisma.project.findMany();
+            const projects = await prisma.project.findMany({
+              include: {
+                reports: true,
+              }
+            });
             return projects;
         } catch (err) {
             if (err instanceof HttpException) {

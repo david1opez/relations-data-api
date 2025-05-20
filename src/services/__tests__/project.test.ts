@@ -14,9 +14,17 @@ describe('ProjectService', () => {
     it('debe devolver todos los proyectos', async () => {
       const mockProjects = [
         { projectID: 1, name: 'Project A', description: null, startDate: new Date('2025-06-01T10:00:00Z'),
-          endDate: new Date('2025-06-01T18:00:00Z'), },
+          endDate: new Date('2025-06-01T18:00:00Z'), reports: [
+            {
+              reportID: 1,
+              reportType: 'Summary',
+              generatedAt: new Date('2025-06-01T13:00:00Z'),
+              fileURL: 'http://example.com/report1.pdf',
+              format: 'PDF'
+            }
+          ], },
         { projectID: 2, name: 'Project B', description: 'Some desc', startDate: new Date('2025-06-01'),
-          endDate: new Date('2027-06-01'), },
+          endDate: new Date('2027-06-01'), reports: [], },
       ];
       prismaMock.project.findMany.mockResolvedValue(mockProjects);
 
@@ -37,13 +45,21 @@ describe('ProjectService', () => {
           userID: 1,
           projectID: 10,
           projectRole: null,
-          project: { projectID: 10, name: 'Alpha', description: null },
+          project: { projectID: 10, name: 'Alpha', description: null, reports: [] },
         },
         {
           userID: 1,
           projectID: 20,
           projectRole: 'Owner',
-          project: { projectID: 20, name: 'Beta', description: 'Beta desc' },
+          project: { projectID: 20, name: 'Beta', description: 'Beta desc', reports: [
+              {
+                reportID: 2,
+                reportType: 'Final',
+                generatedAt: new Date('2025-07-01T14:00:00Z'),
+                fileURL: 'http://example.com/report2.pdf',
+                format: 'PDF'
+              }
+            ], },
         },
       ];
       prismaMock.userProject.findMany.mockResolvedValue(mockUserProjects);
