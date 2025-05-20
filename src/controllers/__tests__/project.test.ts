@@ -1,5 +1,6 @@
 import ProjectController from '../project';
 import { prismaMock } from '../../../tests/prismaTestClient';
+import HttpException from '../../models/http-exception';
 
 describe('ProjectController', () => {
     let projectController: ProjectController;
@@ -112,4 +113,162 @@ describe('ProjectController', () => {
             await expect(projectController.getUserProjects(userID)).rejects.toThrow('Error fetching user projects');
         });
     });
+    
+    describe('addProject', () => {
+        it('debe retornar el proyecto agregado cuando el servicio funciona', async () => {
+          const input = {
+            name: 'Proyecto Test',
+            description: 'Descripción',
+            users: [{ userID: 1, projectRole: 'Owner' }]
+          };
+      
+          const mockResult = {
+            project: { projectID: 10, name: 'Proyecto Test', description: 'Descripción', startDate: null, endDate: null },
+            assignedUsers: input.users
+          };
+      
+          // Mock del método del servicio
+          const spy = jest.spyOn(projectController['projectService'], 'addProject').mockResolvedValue(mockResult);
+      
+          const result = await projectController.addProject(input);
+      
+          expect(result).toEqual(mockResult);
+          expect(spy).toHaveBeenCalledWith(input);
+        });
+        it('debe propagar HttpException si el servicio lanza una excepción controlada', async () => {
+            const input = {
+              name: 'Proyecto inválido',
+              description: 'Descripción',
+              users: []
+            };
+        
+            const error = new HttpException(400, 'Error controlado');
+        
+            jest.spyOn(projectController['projectService'], 'addProject').mockRejectedValue(error);
+        
+            await expect(projectController.addProject(input)).rejects.toThrow(HttpException);
+          });
+        it('debe lanzar HttpException(500) si ocurre un error inesperado', async () => {
+        const input = {
+            name: 'Proyecto con error',
+            description: 'Descripción',
+            users: []
+        };
+    
+        const error = new Error('DB falla');
+    
+        jest.spyOn(projectController['projectService'], 'addProject').mockRejectedValue(error);
+    
+        await expect(projectController.addProject(input)).rejects.toThrow(HttpException);
+        });
+    });
+    
+    describe('deleteProject', () => {
+        it('debe eliminar el proyecto si el servicio lo elimina correctamente', async () => {
+          const projectID = 123;
+          const mockDeleted = { projectID, name: 'X', description: 'Desc', startDate: null, endDate: null};
+      
+          const controller = new ProjectController();
+          jest
+            .spyOn(controller['projectService'], 'deleteProject')
+            .mockResolvedValue(mockDeleted);
+      
+          const result = await controller.deleteProject(projectID);
+      
+          expect(result).toEqual(mockDeleted);
+        });
+        it('debe propagar HttpException(404) si el servicio lo lanza', async () => {
+            const projectID = 404;
+            const err = new HttpException(404, 'Not found');
+        
+            const controller = new ProjectController();
+            jest
+              .spyOn(controller['projectService'], 'deleteProject')
+              .mockRejectedValue(err);
+        
+            await expect(controller.deleteProject(projectID)).rejects.toThrow(HttpException);
+            await expect(controller.deleteProject(projectID)).rejects.toMatchObject({
+              errorCode: 404,
+            });
+        });
+        it('debe lanzar HttpException(500) si ocurre un error inesperado', async () => {
+            const projectID = 123;
+            const err = new Error('DB fail');
+        
+            const controller = new ProjectController();
+            jest
+              .spyOn(controller['projectService'], 'deleteProject')
+              .mockRejectedValue(err);
+        
+            await expect(controller.deleteProject(projectID)).rejects.toThrow(HttpException);
+            await expect(controller.deleteProject(projectID)).rejects.toMatchObject({
+              errorCode: 500,
+            });
+        });
+    });
+    
+    describe('updateProjectUsers', () => {
+      it('debe devolver los usuarios actualizados correctamente', async () => {
+        const controller = new ProjectController();
+    
+        const input = {
+          projectID: 1,
+          users: [
+            { userID: 1, projectRole: 'Member' },
+            { userID: 2, projectRole: 'Admin' },
+          ],
+        };
+    
+        const mockResponse = [
+          { userID: 1, projectID: 1, projectRole: 'Member' },
+          { userID: 2, projectID: 1, projectRole: 'Admin' },
+        ];
+    
+        jest
+          .spyOn(controller['projectService'], 'updateProjectUsers')
+          .mockResolvedValue(mockResponse);
+    
+        const result = await controller.updateProjectUsers(input);
+    
+        expect(result).toEqual(mockResponse);
+      });
+      it('debe propagar un HttpException si el servicio lo lanza', async () => {
+        const controller = new ProjectController();
+    
+        const input = {
+          projectID: 1,
+          users: [],
+        };
+    
+        const error = new HttpException(400, 'Bad request');
+    
+        jest
+          .spyOn(controller['projectService'], 'updateProjectUsers')
+          .mockRejectedValue(error);
+    
+        await expect(controller.updateProjectUsers(input)).rejects.toThrow(HttpException);
+        await expect(controller.updateProjectUsers(input)).rejects.toMatchObject({
+          errorCode: 400,
+        });
+      });
+      it('debe lanzar HttpException(500) si ocurre un error inesperado', async () => {
+        const controller = new ProjectController();
+    
+        const input = {
+          projectID: 1,
+          users: [],
+        };
+    
+        const unexpectedError = new Error('DB failure');
+    
+        jest
+          .spyOn(controller['projectService'], 'updateProjectUsers')
+          .mockRejectedValue(unexpectedError);
+    
+        await expect(controller.updateProjectUsers(input)).rejects.toThrow(HttpException);
+        await expect(controller.updateProjectUsers(input)).rejects.toMatchObject({
+          errorCode: 500,
+        });
+      });
+    });        
 });
