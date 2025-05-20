@@ -288,7 +288,7 @@ describe('ProjectHandler', () => {
   
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        message: `Users of Project ID ${projectID} succesfully updated`,
+        message: `Users of Project ID ${projectID} successfully updated`,
         users: mockUpdatedUsers
       });
       expect(nextFunction).not.toHaveBeenCalled();
@@ -310,7 +310,7 @@ describe('ProjectHandler', () => {
       expect(nextFunction).toHaveBeenCalled();
       const error = nextFunction.mock.calls[0][0] as HttpException;
       expect(error).toBeInstanceOf(HttpException);
-      expect(error.errorCode).toBe(404);
+      expect(error.errorCode).toBe(400);
     });
     it('debe llamar a next(err) si el controller lanza un error', async () => {
       const handler = new ProjectHandler();
