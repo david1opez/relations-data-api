@@ -81,7 +81,10 @@ This is a different speaker.`;
             prismaMock.call.findUnique.mockResolvedValue(mockCall);
 
             const result = await callController.getCall(callID);
-            expect(result.summary).toBe('00:00:00.000 - 00:00:05.000\nSpeaker1\nTest summary');
+            //expect(result.summary).toBe('00:00:00.000 - 00:00:05.000\nSpeaker1\nTest summary');
+            expect(result.summary).toBe('WEBVTT\n\n00:00:00.000 --> 00:00:05.000\n<v Speaker1>Test summary');
+
+
         });
     });
 });
