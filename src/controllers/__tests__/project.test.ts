@@ -98,7 +98,7 @@ describe('ProjectController', () => {
 
             const result = await projectController.getUserProjects(userID);
             
-            expect(result).toEqual(mockUserProjects.map(up => up.project));
+            expect(result).toEqual(mockUserProjects);
             expect(prismaMock.userProject.findMany).toHaveBeenCalledWith({
                 where: { userID },
                 include: { project: true }

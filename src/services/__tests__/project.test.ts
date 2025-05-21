@@ -65,10 +65,7 @@ describe('ProjectService', () => {
       prismaMock.userProject.findMany.mockResolvedValue(mockUserProjects);
 
       const result = await svc.getUserProjects(1);
-      expect(result).toEqual([
-        mockUserProjects[0].project,
-        mockUserProjects[1].project,
-      ]);
+      expect(result).toEqual(mockUserProjects);
     });
 
     it('debe lanzar HttpException si falla la BD', async () => {

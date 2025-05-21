@@ -71,15 +71,25 @@ describe('ProjectHandler', () => {
 
       expect(nextFunction).toHaveBeenCalled();
       const calledWith = nextFunction.mock.calls[0][0] as HttpException;
-      // assert the exception’s HTTP code property (not `.status`)
+      // assert the exception's HTTP code property (not `.status`)
       expect(calledWith.errorCode).toBe(400);
       expect(calledWith.message).toBe('User ID is required');
     });
 
     it('should return 200 with projects when userID is provided', async () => {
       const mockProjects = [
-        { projectID: 10, name: 'Alpha', description: null },
-        { projectID: 20, name: 'Beta',  description: 'Beta project' },
+        {
+          userID: 1,
+          projectID: 10,
+          projectRole: null,
+          project: { projectID: 10, name: 'Alpha', description: null }
+        },
+        {
+          userID: 1,
+          projectID: 20,
+          projectRole: 'Owner',
+          project: { projectID: 20, name: 'Beta', description: 'Beta project' }
+        }
       ];
       mockRequest = { query: { userID: '42' } };
       jest

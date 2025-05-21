@@ -25,13 +25,11 @@ class ProjectService {
             const userProjects = await prisma.userProject.findMany({
                 where: { userID: userID },
                 include: {
-                    project: true, // Include project details
+                    project: true,
                 },
             });
 
-            const projects = userProjects.map(up => up.project);
-
-            return projects;
+            return userProjects;
         } catch (err) {
             if (err instanceof HttpException) {
                 throw err;
