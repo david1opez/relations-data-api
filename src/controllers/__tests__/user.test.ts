@@ -167,4 +167,50 @@ describe("UserController", () => {
       await expect(userController.deleteUser(999)).rejects.toThrow("Error deleting user: Error: User not found")
     })
   })
+
+  describe("updateUserProjects", () => {
+    const mockProjects = [
+      { projectID: 1, projectRole: "Developer" },
+      { projectID: 2, projectRole: "Manager" }
+    ]
+
+    it("should return updated project assignments when successful", async () => {
+      const mockResult = [
+        {
+          userID: 1,
+          projectID: 1,
+          projectRole: "Developer",
+          project: {
+            projectID: 1,
+            name: "Project 1",
+            description: null,
+            startDate: null,
+            endDate: null
+          }
+        }
+      ]
+      mockUserService.updateUserProjects.mockResolvedValue(mockResult)
+
+      const result = await userController.updateUserProjects({
+        userID: 1,
+        projects: mockProjects
+      })
+
+      expect(result).toEqual(mockResult)
+      expect(mockUserService.updateUserProjects).toHaveBeenCalledWith({
+        userID: 1,
+        projects: mockProjects
+      })
+    })
+
+    it("should throw an error when service fails", async () => {
+      const error = new Error("Service error")
+      mockUserService.updateUserProjects.mockRejectedValue(error)
+
+      await expect(userController.updateUserProjects({
+        userID: 1,
+        projects: mockProjects
+      })).rejects.toThrow("Error updating user projects: Error: Service error")
+    })
+  })
 })

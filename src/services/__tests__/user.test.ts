@@ -141,4 +141,78 @@ describe("UserService", () => {
       message: "User not found",
     })
   })
+
+  describe("updateUserProjects", () => {
+    const mockUser = {
+      userID: 1,
+      name: "Test User",
+      email: "test@example.com",
+      password: null,
+      role: null,
+      departmentID: null
+    }
+    const mockProjects = [
+      { projectID: 1, projectRole: "Developer" },
+      { projectID: 2, projectRole: "Manager" }
+    ]
+
+    beforeEach(() => {
+      prismaMock.user.findUnique.mockResolvedValue(mockUser)
+      prismaMock.userProject.findMany.mockResolvedValue([])
+      prismaMock.userProject.deleteMany.mockResolvedValue({ count: 0 })
+      prismaMock.userProject.upsert.mockResolvedValue({
+        userID: 1,
+        projectID: 1,
+        projectRole: "Developer"
+      })
+    })
+
+    test("should update user projects successfully", async () => {
+      const result = await userService.updateUserProjects({
+        userID: 1,
+        projects: mockProjects
+      })
+
+      expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
+        where: { userID: 1 }
+      })
+      expect(prismaMock.userProject.findMany).toHaveBeenCalledWith({
+        where: { userID: 1 }
+      })
+      expect(result).toBeDefined()
+    })
+
+    test("should throw 404 when user not found", async () => {
+      prismaMock.user.findUnique.mockResolvedValue(null)
+
+      await expect(userService.updateUserProjects({
+        userID: 999,
+        projects: mockProjects
+      })).rejects.toMatchObject({
+        errorCode: 404,
+        message: "User not found"
+      })
+    })
+
+    test("should delete existing assignments not in new list", async () => {
+      const existingAssignments = [
+        { userID: 1, projectID: 3, projectRole: "Developer" }
+      ]
+      prismaMock.userProject.findMany.mockResolvedValue(existingAssignments)
+      
+      await userService.updateUserProjects({
+        userID: 1,
+        projects: mockProjects
+      })
+
+      expect(prismaMock.userProject.deleteMany).toHaveBeenCalledWith({
+        where: {
+          AND: [
+            { userID: 1 },
+            { projectID: { in: [3] } }
+          ]
+        }
+      })
+    })
+  })
 })

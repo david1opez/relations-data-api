@@ -224,4 +224,146 @@ describe("UserHandler", () => {
       expect(mockResponse.json).toHaveBeenCalledWith(mockResult)
     })
   })
+
+  describe("updateUserProjects", () => {
+    it("should return 400 when userID is missing", async () => {
+      mockRequest = {
+        body: { projects: [] }
+      }
+
+      await userHandler.updateUserProjects(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      )
+
+      expect(nextFunction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          errorCode: 400,
+          message: "User ID and projects array are required"
+        })
+      )
+    })
+
+    it("should return 400 when projects array is missing", async () => {
+      mockRequest = {
+        body: { userID: 1 }
+      }
+
+      await userHandler.updateUserProjects(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      )
+
+      expect(nextFunction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          errorCode: 400,
+          message: "User ID and projects array are required"
+        })
+      )
+    })
+
+    it("should return 400 when userID is not a number", async () => {
+      mockRequest = {
+        body: { userID: "abc", projects: [] }
+      }
+
+      await userHandler.updateUserProjects(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      )
+
+      expect(nextFunction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          errorCode: 400,
+          message: "User ID must be a number"
+        })
+      )
+    })
+
+    it("should return 400 when projectID is missing in a project", async () => {
+      mockRequest = {
+        body: {
+          userID: 1,
+          projects: [{ projectRole: "Developer" }]
+        }
+      }
+
+      await userHandler.updateUserProjects(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      )
+
+      expect(nextFunction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          errorCode: 400,
+          message: "Each project must have a valid projectID"
+        })
+      )
+    })
+
+    it("should return 200 and updated projects when successful", async () => {
+      const mockProjects = [
+        { projectID: 1, projectRole: "Developer" },
+        { projectID: 2, projectRole: "Manager" }
+      ]
+      const mockResult = [
+        {
+          userID: 1,
+          projectID: 1,
+          projectRole: "Developer",
+          project: {
+            projectID: 1,
+            name: "Project 1",
+            description: null,
+            startDate: null,
+            endDate: null
+          }
+        }
+      ]
+
+      jest.spyOn(userHandler['userController'], 'updateUserProjects')
+        .mockResolvedValue(mockResult)
+
+      mockRequest = {
+        body: {
+          userID: 1,
+          projects: mockProjects
+        }
+      }
+
+      await userHandler.updateUserProjects(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      )
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200)
+      expect(mockResponse.json).toHaveBeenCalledWith(mockResult)
+    })
+
+    it("should call next with error if controller throws", async () => {
+      const mockError = new Error("Internal Error")
+      jest.spyOn(userHandler['userController'], 'updateUserProjects')
+        .mockRejectedValue(mockError)
+
+      mockRequest = {
+        body: {
+          userID: 1,
+          projects: [{ projectID: 1 }]
+        }
+      }
+
+      await userHandler.updateUserProjects(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      )
+
+      expect(nextFunction).toHaveBeenCalledWith(mockError)
+    })
+  })
 })

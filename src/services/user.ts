@@ -1,6 +1,6 @@
 import prisma from "../../client"
 import HttpException from "../models/http-exception"
-import type { UpdateUserDTO } from "../interfaces/user"
+import type { UpdateUserDTO, UpdateUserProjectsDTO, ProjectAssignment } from "../interfaces/user"
 
 class UserService {
   async checkLogin(userID: number, password: string) {
@@ -123,67 +123,32 @@ class UserService {
 
   async deleteUser(userID: number) {
     try {
-      console.log(`Intentando eliminar usuario con ID: ${userID}`)
-  
-      // 1. Verificar si el usuario existe
       const user = await prisma.user.findUnique({
         where: { userID: userID },
       })
       
       if (!user) {
-        console.log(`Usuario con ID ${userID} no encontrado`)
         throw new HttpException(404, "User not found")
       }
-      
-      console.log(`Usuario encontrado: ${user.name} (${user.email})`)
-  
-      // 2. Verificar si el usuario tiene proyectos asignados
-      const userProjects = await prisma.userProject.findMany({
+        
+      await prisma.userProject.deleteMany({
         where: { userID: userID },
       })
       
-      if (userProjects.length > 0) {
-        console.log(`El usuario tiene ${userProjects.length} proyectos asignados. Eliminando asignaciones...`)
-        
-        // 3. Eliminar las asignaciones de proyectos primero
-        await prisma.userProject.deleteMany({
-          where: { userID: userID },
-        })
-        
-        console.log("Asignaciones de proyectos eliminadas correctamente")
-      } else {
-        console.log("El usuario no tiene proyectos asignados")
-      }
-  
-      // 4. Verificar si el usuario tiene registros de auditoría
+      await prisma.auditLog.deleteMany({
+        where: { userID: userID },
+      })
       const auditLogs = await prisma.auditLog.findMany({
         where: { userID: userID },
       })
-      
-      if (auditLogs.length > 0) {
-        console.log(`El usuario tiene ${auditLogs.length} registros de auditoría. Eliminando registros...`)
-        
-        // 5. Eliminar los registros de auditoría
-        await prisma.auditLog.deleteMany({
-          where: { userID: userID },
-        })
-        
-        console.log("Registros de auditoría eliminados correctamente")
-      } else {
-        console.log("El usuario no tiene registros de auditoría")
-      }
   
-      // 6. Eliminar el usuario
-      console.log(`Eliminando usuario ${userID}...`)
       await prisma.user.delete({
         where: { userID: userID },
       })
-      
-      console.log(`Usuario ${userID} eliminado correctamente`)
-      
+            
       return { success: true, message: "User deleted successfully" }
     } catch (err) {
-      console.error(`Error al eliminar usuario ${userID}:`, err)
+      //console.error(`Error al eliminar usuario ${userID}:`, err)
       
       if (err instanceof HttpException) {
         throw err
@@ -198,7 +163,83 @@ class UserService {
         throw new HttpException(400, "Cannot delete user because it is referenced by other records")
       }
       
-      throw new HttpException(500, `Error deleting user: ${err instanceof Error ? err.message : String(err)}`)
+      throw new HttpException(500, `Error deleting user: ` + err)
+    }
+  }
+
+  async updateUserProjects(data: UpdateUserProjectsDTO) {
+    try {
+      // Check if user exists
+      const user = await prisma.user.findUnique({
+        where: { userID: data.userID },
+      })
+
+      if (!user) {
+        throw new HttpException(404, "User not found")
+      }
+
+      // Get current project assignments
+      const currentAssignments = await prisma.userProject.findMany({
+        where: { userID: data.userID },
+      })
+
+      // Create a map of new project assignments for easy lookup
+      const newAssignmentsMap = new Map(
+        data.projects.map(project => [project.projectID, project.projectRole])
+      )
+
+      // Delete assignments that are not in the new list
+      const assignmentsToDelete = currentAssignments.filter(
+        assignment => !newAssignmentsMap.has(assignment.projectID)
+      )
+
+      if (assignmentsToDelete.length > 0) {
+        await prisma.userProject.deleteMany({
+          where: {
+            AND: [
+              { userID: data.userID },
+              { projectID: { in: assignmentsToDelete.map(a => a.projectID) } }
+            ]
+          }
+        })
+      }
+
+      // Update or create new assignments
+      const operations = data.projects.map(project => {
+        return prisma.userProject.upsert({
+          where: {
+            userID_projectID: {
+              userID: data.userID,
+              projectID: project.projectID
+            }
+          },
+          update: {
+            projectRole: project.projectRole
+          },
+          create: {
+            userID: data.userID,
+            projectID: project.projectID,
+            projectRole: project.projectRole
+          }
+        })
+      })
+
+      await prisma.$transaction(operations)
+
+      // Return updated assignments
+      const updatedAssignments = await prisma.userProject.findMany({
+        where: { userID: data.userID },
+        include: {
+          project: true
+        }
+      })
+
+      return updatedAssignments
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err
+      }
+      throw new HttpException(500, `Error updating user projects: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
 }

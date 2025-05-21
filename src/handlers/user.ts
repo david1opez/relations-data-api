@@ -1,7 +1,7 @@
 import UserController from "../controllers/user"
 import HttpException from "../models/http-exception"
 import type { Request, Response, NextFunction } from "express"
-import type { UpdateUserDTO } from "../interfaces/user"
+import type { UpdateUserDTO, UpdateUserProjectsDTO } from "../interfaces/user"
 
 class UserHandler {
   private userController: UserController
@@ -162,6 +162,41 @@ class UserHandler {
       }
 
       const result = await this.userController.deleteUser(userIDInt)
+      res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  public async updateUserProjects(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { userID, projects } = req.body
+
+      if (!userID || !projects || !Array.isArray(projects)) {
+        throw new HttpException(400, "User ID and projects array are required")
+      }
+
+      const userIDInt = Number.parseInt(userID as string)
+      if (isNaN(userIDInt)) {
+        throw new HttpException(400, "User ID must be a number")
+      }
+
+      // Validate each project assignment
+      for (const project of projects) {
+        if (!project.projectID || typeof project.projectID !== 'number') {
+          throw new HttpException(400, "Each project must have a valid projectID")
+        }
+        if (project.projectRole && typeof project.projectRole !== 'string') {
+          throw new HttpException(400, "Project role must be a string if provided")
+        }
+      }
+
+      const data: UpdateUserProjectsDTO = {
+        userID: userIDInt,
+        projects
+      }
+
+      const result = await this.userController.updateUserProjects(data)
       res.status(200).json(result)
     } catch (err) {
       next(err)

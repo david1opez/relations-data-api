@@ -99,7 +99,7 @@ class ProjectService {
           if (err instanceof HttpException) {
             throw err;
           }
-          console.error("Error in addProject service:", err);
+          //console.error("Error in addProject service:", err);
           throw new HttpException(500, "Error adding project: " + err);
         }
     }
@@ -120,7 +120,7 @@ class ProjectService {
             if (err instanceof HttpException) {
                 throw err;
             }
-            console.error("Error in deleteProject service: ", err);
+            //console.error("Error in deleteProject service: ", err);
             throw new HttpException(500, "Error deleting project: " + err);
         }
     }
@@ -216,7 +216,7 @@ class ProjectService {
         return updatedProjectUsers;
       } catch (err) {
         if (err instanceof HttpException) throw err;
-        console.error("Error in updateProjectUsers service: ", err);
+        //console.error("Error in updateProjectUsers service: ", err);
         throw new HttpException(500, "Error updating project users: " + err);
       }
     }      

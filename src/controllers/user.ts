@@ -1,5 +1,5 @@
 import UserService from "../services/user"
-import type { UpdateUserDTO } from "../interfaces/user"
+import type { UpdateUserDTO, UpdateUserProjectsDTO } from "../interfaces/user"
 
 class UserController {
   private userService: UserService
@@ -59,6 +59,15 @@ class UserController {
       return result
     } catch (err) {
       throw new Error("Error deleting user: " + err)
+    }
+  }
+
+  async updateUserProjects(data: UpdateUserProjectsDTO) {
+    try {
+      const result = await this.userService.updateUserProjects(data)
+      return result
+    } catch (err) {
+      throw new Error("Error updating user projects: " + err)
     }
   }
 }
