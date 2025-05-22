@@ -39,15 +39,22 @@ model Client {
   email        String @id
   name         String
   organization String?
+  description  String? 
   calls        ExternalCallParticipants[]
+  projects     Project[]
 }
 
 model Project {
   projectID    Int            @id @default(autoincrement())
   name         String
   description  String?
+  problemDescription  String?
+  reqFuncionales  String?
+  reqNoFuncionales  String?
   startDate    DateTime?
   endDate      DateTime?
+  clientEmail String?
+  client       Client?        @relation(fields: [clientEmail], references: [email])
   userProjects UserProject[]
   calls        Call[]
   reports      Report[]

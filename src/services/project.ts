@@ -9,6 +9,7 @@ class ProjectService {
             const projects = await prisma.project.findMany({
               include: {
                 reports: true,
+                client: true,
               }
             });
             return projects;
