@@ -21,6 +21,33 @@ class ProjectService {
         }
     }
 
+    async getProjectById(projectID: number) {
+      try {
+          console.log(`Service: Fetching project with ID ${projectID}`)
+          const project = await prisma.project.findUnique({
+              where: { projectID: projectID },
+              include: {
+                  reports: true,
+                  client: true,
+                  
+              }
+          });
+  
+          
+          if (!project) {
+              throw new HttpException(404, `Project with ID ${projectID} not found`);
+              
+          }
+          
+          return project;
+      } catch (err) {
+          if (err instanceof HttpException) {
+              throw err;
+          }
+          throw new HttpException(500, `Error fetching project: ${err}`);
+      }
+    }
+
     async getUserProjects(userID: number) {
         try {
             const userProjects = await prisma.userProject.findMany({

@@ -19,6 +19,24 @@ class ProjectHandler {
         }
     }
 
+    public async getProjectById(req: Request, res: Response, next: NextFunction) {
+        try {
+        const { id } = req.params;
+        if (!id) {
+            throw new HttpException(400, "Project ID is required");
+        }
+
+        const projectID = Number.parseInt(id, 10);
+        if (isNaN(projectID)) {
+            throw new HttpException(400, "Project ID must be a valid number");
+        }
+        const project = await this.projectController.getProjectById(projectID);
+        res.status(200).json(project);
+        } catch (err) {
+                next(err);
+        }
+    }
+
     public async getUserProjects(req: Request, res: Response, next: NextFunction) {
         try {
             const { userID } = req.query; 

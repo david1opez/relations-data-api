@@ -18,6 +18,15 @@ class ProjectController {
         }
     }
 
+    async getProjectById(projectID: number) {
+        try {
+            const project = await this.projectService.getProjectById(projectID);
+            return project;
+        } catch (err) {
+            throw new HttpException(500, "Error fetching project: " + err);
+        }
+    }
+
     async getUserProjects(userID: number) {
         try {
             const projects = await this.projectService.getUserProjects(userID);
