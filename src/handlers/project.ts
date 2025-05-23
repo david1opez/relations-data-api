@@ -58,6 +58,13 @@ class ProjectHandler {
             const createProjectData: CreateProjectDTO = {
                 name: name, 
                 description: description,
+                //problemDescription: problemDescription,
+                //reqFuncionales: reqFunctionales,
+                //reqNoFuncionales: reqNoFunctionales,
+                //startDate: startDate,
+                //endDate: endDate,
+                //clientID: clientID,
+
                 users: users
             }
 
