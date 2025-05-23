@@ -68,7 +68,7 @@ class ProjectService {
 
     async addProject(createProjectData: CreateProjectDTO) {
         try {
-          const { name, description, users } = createProjectData;
+          const { name, description, users, problemDescription, reqFuncionales, reqNoFuncionales, startDate, endDate } = createProjectData;
 
           if (!name || name.trim() === '') {
             throw new HttpException(400, 'A name for the project is required');
@@ -100,6 +100,12 @@ class ProjectService {
               data: {
                 name,
                 description,
+                problemDescription,
+                reqFuncionales,
+                reqNoFuncionales,
+                startDate,
+                endDate,
+
               },
             });
       

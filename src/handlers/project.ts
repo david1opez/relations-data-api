@@ -54,17 +54,15 @@ class ProjectHandler {
 
     public async addProject(req: Request, res: Response, next: NextFunction){
         try {
-            const {name, description = '', users} = req.body;
+            const {name, description = '', users, problemDescription, reqFuncionales, reqNoFuncionales, startDate, endDate } = req.body;
             const createProjectData: CreateProjectDTO = {
                 name: name, 
                 description: description,
-                //problemDescription: problemDescription,
-                //reqFuncionales: reqFunctionales,
-                //reqNoFuncionales: reqNoFunctionales,
-                //startDate: startDate,
-                //endDate: endDate,
-                //clientID: clientID,
-
+                problemDescription: problemDescription,
+                reqFuncionales: reqFuncionales,
+                reqNoFuncionales: reqNoFuncionales,
+                startDate: startDate,
+                endDate: endDate,
                 users: users
             }
 
