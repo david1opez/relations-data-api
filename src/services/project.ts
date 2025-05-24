@@ -23,7 +23,7 @@ class ProjectService {
 
     async getProjectById(projectID: number) {
       try {
-          console.log(`Service: Fetching project with ID ${projectID}`)
+          console.log(`Service: Fetching project with ID ${projectID}`);
           const project = await prisma.project.findUnique({
               where: { projectID: projectID },
               include: {
@@ -68,7 +68,7 @@ class ProjectService {
 
     async addProject(createProjectData: CreateProjectDTO) {
         try {
-          const { name, description, users, problemDescription, reqFuncionales, reqNoFuncionales, startDate, endDate } = createProjectData;
+          const { name, description, users, problemDescription, reqFuncionales, reqNoFuncionales, startDate, endDate, client } = createProjectData;
 
           if (!name || name.trim() === '') {
             throw new HttpException(400, 'A name for the project is required');
@@ -95,7 +95,17 @@ class ProjectService {
               }
             }
       
-            // 2. Crear el proyecto
+            // 2. Si hay cliente, verificar si existe o crearlo
+            let clientEmail = null;
+            if (client && client.email) {
+              let foundClient = await tx.client.findUnique({ where: { email: client.email } });
+              if (!foundClient) {
+                foundClient = await tx.client.create({ data: client });
+              }
+              clientEmail = foundClient.email;
+            }
+      
+            // 3. Crear el proyecto
             const project = await tx.project.create({
               data: {
                 name,
@@ -105,11 +115,11 @@ class ProjectService {
                 reqNoFuncionales,
                 startDate,
                 endDate,
-
+                clientEmail: clientEmail,
               },
             });
       
-            // 3. Si hay usuarios, crear relaciones en userProject
+            // 4. Si hay usuarios, crear relaciones en userProject
             if (users && users.length > 0) {
               const userProjectData = users.map((user) => ({
                 userID: user.userID,
