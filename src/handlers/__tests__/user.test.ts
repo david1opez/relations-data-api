@@ -320,7 +320,11 @@ describe("UserHandler", () => {
             name: "Project 1",
             description: null,
             startDate: null,
-            endDate: null
+            endDate: null,
+            problemDescription: null,
+            reqFuncionales: null,
+            reqNoFuncionales: null,
+            clientEmail: null
           }
         }
       ]
