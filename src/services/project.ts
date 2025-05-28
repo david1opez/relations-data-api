@@ -151,20 +151,74 @@ class ProjectService {
 
     async deleteProject(projectID: number){
         try{
-            const project = await prisma.project.findUnique({where: {projectID: projectID}});
+            const project = await prisma.project.findUnique({
+                where: {projectID: projectID},
+                include: {
+                    reports: true,
+                    calls: true,
+                    userProjects: true
+                }
+            });
             
             if(!project){
                 throw new HttpException(404, `Project with ID ${projectID} not found`);
             }
 
-            const deletedProject = await prisma.project.delete({where: {projectID: projectID}});
+            // Delete in transaction to ensure atomicity
+            const deletedProject = await prisma.$transaction(async (tx) => {
+                // Update reports to unlink them from the project
+                if (project.reports.length > 0) {
+                    await tx.report.updateMany({
+                        where: { projectID: projectID },
+                        data: { projectID: undefined }
+                    });
+                }
+
+                // Delete all associated calls
+                if (project.calls.length > 0) {
+                    // First delete report calls
+                    await tx.reportCall.deleteMany({
+                        where: { 
+                            call: { projectID: projectID }
+                        }
+                    });
+                    
+                    // Then delete call participants
+                    await tx.internalCallParticipants.deleteMany({
+                        where: { 
+                            call: { projectID: projectID }
+                        }
+                    });
+                    await tx.externalCallParticipants.deleteMany({
+                        where: { 
+                            call: { projectID: projectID }
+                        }
+                    });
+                    
+                    // Finally delete the calls
+                    await tx.call.deleteMany({
+                        where: { projectID: projectID }
+                    });
+                }
+
+                // Delete user project associations
+                if (project.userProjects.length > 0) {
+                    await tx.userProject.deleteMany({
+                        where: { projectID: projectID }
+                    });
+                }
+
+                // Finally delete the project itself
+                return await tx.project.delete({
+                    where: {projectID: projectID}
+                });
+            });
             
             return deletedProject;
         } catch(err) {
             if (err instanceof HttpException) {
                 throw err;
             }
-            //console.error("Error in deleteProject service: ", err);
             throw new HttpException(500, "Error deleting project: " + err);
         }
     }

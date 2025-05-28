@@ -110,8 +110,8 @@ model Report {
   generatedAt DateTime?
   fileURL     String?
   format      String?
-  projectID   Int
-  project     Project  @relation(fields: [projectID], references: [projectID], onDelete: Restrict, onUpdate: Cascade)
+  projectID   Int?
+  project     Project?  @relation(fields: [projectID], references: [projectID], onDelete: SetNull, onUpdate: Cascade)
   reportCalls ReportCall[]
 }
 
