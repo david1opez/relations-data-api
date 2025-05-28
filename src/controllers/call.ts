@@ -107,6 +107,15 @@ class CallController {
             throw new Error("An error occurred while fetching the call: " + err);
         }
     }
+
+    async deleteCall(callID: number) {
+        try {
+            const result = await this.callService.deleteCall(callID);
+            return result;
+        } catch (err) {
+            throw new Error("An error occurred while deleting the call: " + err);
+        }
+    }
 }
 
 export default CallController;

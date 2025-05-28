@@ -12,8 +12,8 @@ describe('CallController', () => {
         it('should return all calls for a project', async () => {
             const projectID = 1;
             const mockCalls = [
-                { callID: 1, title: 'Call 1', projectID, startTime: null, endTime: null, summary: null },
-                { callID: 2, title: 'Call 2', projectID, startTime: null, endTime: null, summary: null }
+                { callID: 1, title: 'Call 1', projectID, startTime: null, endTime: null, summary: null, analyzed: false },
+                { callID: 2, title: 'Call 2', projectID, startTime: null, endTime: null, summary: null, analyzed: false }
             ];
 
             prismaMock.call.findMany.mockResolvedValue(mockCalls);
@@ -76,6 +76,7 @@ This is a different speaker.`;
                 externalParticipants: [],
                 startTime: null,
                 endTime: null,
+                analyzed: false
             };
 
             prismaMock.call.findUnique.mockResolvedValue(mockCall);
@@ -85,6 +86,29 @@ This is a different speaker.`;
             expect(result.summary).toBe('WEBVTT\n\n00:00:00.000 --> 00:00:05.000\n<v Speaker1>Test summary');
 
 
+        });
+    });
+
+    describe('deleteCall', () => {
+        it('should successfully delete a call', async () => {
+            const callID = 1;
+            const mockResult = { message: "Call deleted successfully" };
+
+            jest.spyOn(callController['callService'], 'deleteCall')
+                .mockResolvedValue(mockResult);
+
+            const result = await callController.deleteCall(callID);
+            expect(result).toEqual(mockResult);
+        });
+
+        it('should throw error when service fails', async () => {
+            const callID = 1;
+            jest.spyOn(callController['callService'], 'deleteCall')
+                .mockRejectedValue(new Error('Service error'));
+
+            await expect(callController.deleteCall(callID))
+                .rejects
+                .toThrow('An error occurred while deleting the call');
         });
     });
 });

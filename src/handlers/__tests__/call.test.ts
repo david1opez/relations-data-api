@@ -43,8 +43,8 @@ describe('CallHandler', () => {
             };
 
             const mockCalls = [
-                { callID: 1, title: 'Call 1', startTime: null, endTime: null },
-                { callID: 2, title: 'Call 2', startTime: null, endTime: null }
+                { callID: 1, title: 'Call 1', startTime: null, endTime: null, analyzed: false },
+                { callID: 2, title: 'Call 2', startTime: null, endTime: null, analyzed: false }
             ];
 
             jest.spyOn(callHandler['callController'], 'getAllCalls')
@@ -93,6 +93,7 @@ describe('CallHandler', () => {
                 startTime: null,
                 endTime: null,
                 projectID: 101,
+                analyzed: false,
                 internalParticipants: [
                     {
                         user: {
@@ -102,6 +103,7 @@ describe('CallHandler', () => {
                             role: 'Manager' as string | null,
                             departmentID: 101 as number | null,
                             password: null,
+                            profilePicture: null
                         },
                         callID: 1,
                         userID: 1
@@ -112,7 +114,8 @@ describe('CallHandler', () => {
                         client: {
                             name: 'Jane Smith',
                             email: 'jane.smith@example.com',
-                            organization: 'External Org'
+                            organization: 'External Org',
+                            description: null
                         },
                         callID: 1,
                         clientEmail: 'jane.smith@example.com'
@@ -131,6 +134,65 @@ describe('CallHandler', () => {
 
             expect(mockResponse.status).toHaveBeenCalledWith(200);
             expect(mockResponse.json).toHaveBeenCalledWith(mockCall);
+        });
+    });
+
+    describe('deleteCall', () => {
+        it('should return 400 when callID is missing', async () => {
+            mockRequest = {
+                query: {}
+            };
+
+            await callHandler.deleteCall(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(nextFunction).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    errorCode: 400,
+                    message: 'Call ID is required'
+                })
+            );
+        });
+
+        it('should return 200 with success message when call is deleted', async () => {
+            mockRequest = {
+                query: { callID: '1' }
+            };
+
+            const mockResult = { message: "Call deleted successfully" };
+
+            jest.spyOn(callHandler['callController'], 'deleteCall')
+                .mockResolvedValue(mockResult);
+
+            await callHandler.deleteCall(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith(mockResult);
+        });
+
+        it('should pass error to next function when controller throws', async () => {
+            mockRequest = {
+                query: { callID: '1' }
+            };
+
+            const error = new Error('Controller error');
+            jest.spyOn(callHandler['callController'], 'deleteCall')
+                .mockRejectedValue(error);
+
+            await callHandler.deleteCall(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(nextFunction).toHaveBeenCalledWith(error);
         });
     });
 });

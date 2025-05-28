@@ -38,6 +38,21 @@ class CallHandler {
             next(err);
         }
     }
+
+    public async deleteCall(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { callID } = req.query;
+            
+            if (!callID) {
+                throw new HttpException(400, "Call ID is required");
+            }
+
+            const result = await this.callController.deleteCall(parseInt(callID as string));
+            res.status(200).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export default CallHandler;
