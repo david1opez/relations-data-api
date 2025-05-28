@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { ReportHandler } from "../handlers/report"; 
+import ReportHandler from "../handlers/report";
 
 const router = Router();
 const reportHandler = new ReportHandler();
