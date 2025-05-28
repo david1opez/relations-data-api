@@ -27,8 +27,45 @@ export default async function Home(req: Request, res: Response) {
             })
         })
         .then(response => response.json())
-        .then(data => {
-            SendResponse(res, 200, data);
+        .then((data: {
+            access_token: string,
+            expires_in: number,
+            ext_expires_in: number,
+            id_token: string,
+            scope: string,
+            token_type: string
+        }) => {
+            if (!data.access_token) {
+                return Error(res, 400, 'Failed to obtain access token');
+            }
+
+            fetch("https://graph.microsoft.com/v1.0/me", {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${data.access_token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then((profile: {
+                "@odata.context": string;
+                userPrincipalName: string;
+                id: string;
+                displayName: string;
+                surname: string;
+                givenName: string;
+                preferredLanguage: string;
+                mail: string | null;
+                mobilePhone: string | null;
+                jobTitle: string | null;
+                officeLocation: string | null;
+                businessPhones: string[];
+            }) => {
+                SendResponse(res, 200, { profile, tokens: data });
+            })
+            .catch(err => {
+                Error(res, 400, err);
+            });
         })
         .catch(err => {
             Error(res, 400, err);
