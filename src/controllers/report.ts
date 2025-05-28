@@ -11,6 +11,10 @@ class ReportController {
     async getAllReports(): Promise<Report[]> {
         return this.reportService.getAllReports();
     }
+
+    async getReportById(reportID: number) {
+        return this.reportService.getReportById(reportID);
+    }
 }
 
 export default ReportController; 
