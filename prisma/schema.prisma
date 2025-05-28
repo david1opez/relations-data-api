@@ -8,19 +8,19 @@ datasource db {
 }
 
 model Department {
-  departmentID Int     @id @default(autoincrement())
-  name         String  @unique
+  departmentID Int    @id @default(autoincrement())
+  name         String @unique
   users        User[]
 }
 
 model User {
-  userID       Int                  @id @default(autoincrement())
+  userID       Int       @id @default(autoincrement())
   name         String
-  email        String               @unique
+  email        String    @unique
   password     String?
   role         String?
   departmentID Int?
-  department   Department?          @relation(fields: [departmentID], references: [departmentID], onDelete: SetNull, onUpdate: Cascade)
+  department   Department? @relation(fields: [departmentID], references: [departmentID], onDelete: SetNull, onUpdate: Cascade)
   auditLogs    AuditLog[]
   userProjects UserProject[]
   calls        InternalCallParticipants[]
@@ -31,33 +31,33 @@ model AuditLog {
   action      String
   dateTime    DateTime @default(now())
   description String?
-  userID      Int
-  user        User     @relation(fields: [userID], references: [userID], onDelete: Restrict, onUpdate: Cascade)
+  userID      Int?
+  user        User? @relation(fields: [userID], references: [userID], onDelete: SetNull, onUpdate: Cascade)
 }
 
 model Client {
   email        String @id
   name         String
   organization String?
-  description  String? 
+  description  String?
   calls        ExternalCallParticipants[]
   projects     Project[]
 }
 
 model Project {
-  projectID    Int            @id @default(autoincrement())
-  name         String
-  description  String?
-  problemDescription  String?
-  reqFuncionales  String?
-  reqNoFuncionales  String?
-  startDate    DateTime?
-  endDate      DateTime?
-  clientEmail String?
-  client       Client?        @relation(fields: [clientEmail], references: [email])
-  userProjects UserProject[]
-  calls        Call[]
-  reports      Report[]
+  projectID          Int      @id @default(autoincrement())
+  name               String
+  description        String?
+  problemDescription String?
+  reqFuncionales     String?
+  reqNoFuncionales   String?
+  startDate          DateTime?
+  endDate            DateTime?
+  clientEmail        String?
+  client             Client? @relation(fields: [clientEmail], references: [email], onDelete: Cascade)
+  userProjects       UserProject[]
+  calls              Call[]
+  reports            Report[]
 }
 
 model UserProject {
@@ -65,8 +65,8 @@ model UserProject {
   projectID   Int
   projectRole String?
 
-  user    User    @relation(fields: [userID], references: [userID], onDelete: Restrict, onUpdate: Cascade)
-  project Project @relation(fields: [projectID], references: [projectID], onDelete: Restrict, onUpdate: Cascade)
+  user    User    @relation(fields: [userID], references: [userID], onDelete: Cascade, onUpdate: Cascade)
+  project Project @relation(fields: [projectID], references: [projectID], onDelete: Cascade, onUpdate: Cascade)
 
   @@id([userID, projectID])
 }
@@ -77,8 +77,9 @@ model Call {
   startTime DateTime?
   endTime   DateTime?
   summary   String?
-  projectID Int
-  project   Project  @relation(fields: [projectID], references: [projectID], onDelete: Restrict, onUpdate: Cascade)
+  projectID Int?
+  analyzed  Boolean  @default(false)
+  project   Project? @relation(fields: [projectID], references: [projectID], onDelete: SetNull, onUpdate: Cascade)
   internalParticipants InternalCallParticipants[]
   externalParticipants ExternalCallParticipants[]
   reportCalls ReportCall[]
@@ -88,8 +89,8 @@ model InternalCallParticipants {
   userID Int
   callID Int
 
-  user User @relation(fields: [userID], references: [userID], onDelete: Restrict, onUpdate: Cascade)
-  call Call @relation(fields: [callID], references: [callID], onDelete: Restrict, onUpdate: Cascade)
+  user User @relation(fields: [userID], references: [userID], onDelete: Cascade, onUpdate: Cascade)
+  call Call @relation(fields: [callID], references: [callID], onDelete: Cascade, onUpdate: Cascade)
 
   @@id([userID, callID])
 }
@@ -98,8 +99,8 @@ model ExternalCallParticipants {
   clientEmail String
   callID      Int
 
-  client Client @relation(fields: [clientEmail], references: [email], onDelete: Restrict, onUpdate: Cascade)
-  call   Call   @relation(fields: [callID], references: [callID], onDelete: Restrict, onUpdate: Cascade)
+  client Client @relation(fields: [clientEmail], references: [email], onDelete: Cascade, onUpdate: Cascade)
+  call   Call   @relation(fields: [callID], references: [callID], onDelete: Cascade, onUpdate: Cascade)
 
   @@id([clientEmail, callID])
 }
@@ -111,7 +112,7 @@ model Report {
   fileURL     String?
   format      String?
   projectID   Int?
-  project     Project?  @relation(fields: [projectID], references: [projectID], onDelete: SetNull, onUpdate: Cascade)
+  project     Project? @relation(fields: [projectID], references: [projectID], onDelete: SetNull, onUpdate: Cascade)
   reportCalls ReportCall[]
 }
 
@@ -122,8 +123,8 @@ model ReportCall {
   startTime DateTime?
   endTime   DateTime?
 
-  report Report @relation(fields: [reportID], references: [reportID], onDelete: Restrict, onUpdate: Cascade)
-  call   Call   @relation(fields: [callID], references: [callID], onDelete: Restrict, onUpdate: Cascade)
+  report Report? @relation(fields: [reportID], references: [reportID], onDelete: Cascade, onUpdate: Cascade)
+  call   Call    @relation(fields: [callID], references: [callID], onDelete: Cascade, onUpdate: Cascade)
 
   @@id([reportID, callID])
 }
