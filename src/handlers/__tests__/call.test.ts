@@ -43,8 +43,8 @@ describe('CallHandler', () => {
             };
 
             const mockCalls = [
-                { callID: 1, title: 'Call 1', startTime: null, endTime: null, analyzed: false },
-                { callID: 2, title: 'Call 2', startTime: null, endTime: null, analyzed: false }
+                { callID: 1, title: 'Call 1', startTime: null, endTime: null, isAnalyzed: false },
+                { callID: 2, title: 'Call 2', startTime: null, endTime: null, isAnalyzed: false }
             ];
 
             jest.spyOn(callHandler['callController'], 'getAllCalls')
@@ -93,7 +93,7 @@ describe('CallHandler', () => {
                 startTime: null,
                 endTime: null,
                 projectID: 101,
-                analyzed: false,
+                isAnalyzed: false,
                 internalParticipants: [
                     {
                         user: {

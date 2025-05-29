@@ -79,7 +79,7 @@ model Call {
   endTime   DateTime?
   summary   String?
   projectID Int?
-  analyzed  Boolean  @default(false)
+  isAnalyzed  Boolean  @default(false)
   project   Project? @relation(fields: [projectID], references: [projectID], onDelete: SetNull, onUpdate: Cascade)
   internalParticipants InternalCallParticipants[]
   externalParticipants ExternalCallParticipants[]

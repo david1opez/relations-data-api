@@ -12,8 +12,8 @@ describe('CallController', () => {
         it('should return all calls for a project', async () => {
             const projectID = 1;
             const mockCalls = [
-                { callID: 1, title: 'Call 1', projectID, startTime: null, endTime: null, summary: null, analyzed: false },
-                { callID: 2, title: 'Call 2', projectID, startTime: null, endTime: null, summary: null, analyzed: false }
+                { callID: 1, title: 'Call 1', projectID, startTime: null, endTime: null, summary: null, isAnalyzed: false },
+                { callID: 2, title: 'Call 2', projectID, startTime: null, endTime: null, summary: null, isAnalyzed: false }
             ];
 
             prismaMock.call.findMany.mockResolvedValue(mockCalls);
@@ -76,7 +76,7 @@ This is a different speaker.`;
                 externalParticipants: [],
                 startTime: null,
                 endTime: null,
-                analyzed: false
+                isAnalyzed: false
             };
 
             prismaMock.call.findUnique.mockResolvedValue(mockCall);
