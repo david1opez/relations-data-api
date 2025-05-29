@@ -8,7 +8,7 @@ class CallService {
                 // Return all info except for the transcript
                 where: { projectID: projectID },
                 omit: {
-                    summary: true, 
+                    summary: false, 
                     projectID: true,
                 },
             });
