@@ -8,5 +8,6 @@ router.get('/calls', callHandler.getAllCalls.bind(callHandler)); // /calls?proje
 router.get('/details', callHandler.getCall.bind(callHandler)); // /details?callID=1234
 router.delete('/delete', callHandler.deleteCall.bind(callHandler)); // /delete?callID=1234
 router.patch('/markAnalyzed', callHandler.markCallAsAnalyzed.bind(callHandler));
+router.post('/add', callHandler.addCall.bind(callHandler)); // POST /add with body containing projectID, title, startTime, endTime
 
 export default router;

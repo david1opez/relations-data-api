@@ -124,4 +124,201 @@ describe('CallService', () => {
                 .toThrow(HttpException);
         });
     });
+
+    describe('addCall', () => {
+        it('should throw 404 when project does not exist', async () => {
+            const projectID = 999;
+            prismaMock.project.findUnique.mockResolvedValue(null);
+
+            await expect(callService.addCall(projectID, null, null, null, null))
+                .rejects
+                .toThrow(HttpException);
+        });
+
+        it('should successfully create a new call with participants', async () => {
+            const projectID = 1;
+            const title = 'Test Call';
+            const startTime = new Date('2024-01-01T10:00:00Z');
+            const endTime = new Date('2024-01-01T11:00:00Z');
+            const summary = 'Test summary';
+            const internalParticipants = [1, 2];
+            const externalParticipants = ['client1@test.com', 'client2@test.com'];
+
+            const mockProject = {
+                projectID,
+                name: 'Test Project',
+                clientEmail: null,
+                description: null,
+                problemDescription: null,
+                reqFuncionales: null,
+                reqNoFuncionales: null,
+                startDate: null,
+                endDate: null
+            };
+
+            const mockCall = {
+                callID: 1,
+                projectID,
+                title,
+                startTime,
+                endTime,
+                summary,
+                isAnalyzed: false,
+                internalParticipants: [
+                    { userID: 1, user: { name: 'User 1' } },
+                    { userID: 2, user: { name: 'User 2' } }
+                ],
+                externalParticipants: [
+                    { clientEmail: 'client1@test.com', client: { name: 'Client 1' } },
+                    { clientEmail: 'client2@test.com', client: { name: 'Client 2' } }
+                ]
+            };
+
+            prismaMock.project.findUnique.mockResolvedValue(mockProject);
+            prismaMock.$transaction.mockImplementation((callback: (tx: typeof prismaMock) => Promise<any>) => callback(prismaMock));
+            prismaMock.call.create.mockResolvedValue(mockCall);
+
+            const result = await callService.addCall(
+                projectID, 
+                title, 
+                startTime, 
+                endTime, 
+                summary,
+                internalParticipants,
+                externalParticipants
+            );
+
+            expect(result).toEqual(mockCall);
+            expect(prismaMock.call.create).toHaveBeenCalledWith({
+                data: {
+                    projectID,
+                    title,
+                    startTime,
+                    endTime,
+                    summary,
+                    isAnalyzed: false,
+                    internalParticipants: {
+                        create: internalParticipants.map(userID => ({ userID }))
+                    },
+                    externalParticipants: {
+                        create: externalParticipants.map(clientEmail => ({ clientEmail }))
+                    }
+                },
+                include: {
+                    internalParticipants: {
+                        include: {
+                            user: true
+                        }
+                    },
+                    externalParticipants: {
+                        include: {
+                            client: true
+                        }
+                    }
+                }
+            });
+        });
+
+        it('should create a call without participants', async () => {
+            const projectID = 1;
+            const mockProject = {
+                projectID,
+                name: 'Test Project',
+                clientEmail: null,
+                description: null,
+                problemDescription: null,
+                reqFuncionales: null,
+                reqNoFuncionales: null,
+                startDate: null,
+                endDate: null
+            };
+
+            const mockCall = {
+                callID: 1,
+                projectID,
+                title: null,
+                startTime: null,
+                endTime: null,
+                summary: null,
+                isAnalyzed: false,
+                internalParticipants: [],
+                externalParticipants: []
+            };
+
+            prismaMock.project.findUnique.mockResolvedValue(mockProject);
+            prismaMock.$transaction.mockImplementation((callback: (tx: typeof prismaMock) => Promise<any>) => callback(prismaMock));
+            prismaMock.call.create.mockResolvedValue(mockCall);
+
+            const result = await callService.addCall(projectID, null, null, null, null);
+            expect(result).toEqual(mockCall);
+            expect(prismaMock.call.create).toHaveBeenCalledWith({
+                data: {
+                    projectID,
+                    title: null,
+                    startTime: null,
+                    endTime: null,
+                    summary: null,
+                    isAnalyzed: false
+                },
+                include: {
+                    internalParticipants: {
+                        include: {
+                            user: true
+                        }
+                    },
+                    externalParticipants: {
+                        include: {
+                            client: true
+                        }
+                    }
+                }
+            });
+        });
+
+        it('should throw 400 when invalid participant ID is provided', async () => {
+            const projectID = 1;
+            const mockProject = {
+                projectID,
+                name: 'Test Project',
+                clientEmail: null,
+                description: null,
+                problemDescription: null,
+                reqFuncionales: null,
+                reqNoFuncionales: null,
+                startDate: null,
+                endDate: null
+            };
+
+            prismaMock.project.findUnique.mockResolvedValue(mockProject);
+            prismaMock.$transaction.mockImplementation((callback: (tx: typeof prismaMock) => Promise<any>) => callback(prismaMock));
+            prismaMock.call.create.mockRejectedValue({ code: 'P2003' });
+
+            await expect(callService.addCall(projectID, null, null, null, null, [999]))
+                .rejects
+                .toThrow(HttpException);
+        });
+
+        it('should throw HttpException when database operation fails', async () => {
+            const projectID = 1;
+            const mockProject = {
+                projectID,
+                name: 'Test Project',
+                clientEmail: null,
+                description: null,
+                problemDescription: null,
+                reqFuncionales: null,
+                reqNoFuncionales: null,
+                startDate: null,
+                endDate: null
+            };
+
+            prismaMock.project.findUnique.mockResolvedValue(mockProject);
+            prismaMock.$transaction.mockImplementation((callback: (tx: typeof prismaMock) => Promise<any>) => callback(prismaMock));
+            prismaMock.call.create.mockRejectedValue(new Error('DB error'));
+
+            await expect(callService.addCall(projectID, null, null, null, null))
+                .rejects
+                .toThrow(HttpException);
+        });
+    });
 });

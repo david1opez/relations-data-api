@@ -111,4 +111,40 @@ This is a different speaker.`;
                 .toThrow('An error occurred while deleting the call');
         });
     });
+
+    describe('addCall', () => {
+        it('should successfully create a new call', async () => {
+            const projectID = 1;
+            const title = 'Test Call';
+            const startTime = new Date('2024-01-01T10:00:00Z');
+            const endTime = new Date('2024-01-01T11:00:00Z');
+            const summary = 'Test summary';
+
+            const mockCall = {
+                callID: 1,
+                projectID,
+                title,
+                startTime,
+                endTime,
+                summary,
+                isAnalyzed: false
+            };
+
+            jest.spyOn(callController['callService'], 'addCall')
+                .mockResolvedValue(mockCall);
+
+            const result = await callController.addCall(projectID, title, startTime, endTime, summary);
+            expect(result).toEqual(mockCall);
+        });
+
+        it('should throw error when service fails', async () => {
+            const projectID = 1;
+            jest.spyOn(callController['callService'], 'addCall')
+                .mockRejectedValue(new Error('Service error'));
+
+            await expect(callController.addCall(projectID, null, null, null, null))
+                .rejects
+                .toThrow('An error occurred while creating the call');
+        });
+    });
 });

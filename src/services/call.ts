@@ -103,6 +103,79 @@ class CallService {
     }
 }
 
+    async addCall(
+        projectID: number, 
+        title: string | null, 
+        startTime: Date | null, 
+        endTime: Date | null, 
+        summary: string | null,
+        internalParticipants: number[] = [], // Array of userIDs
+        externalParticipants: string[] = []  // Array of client emails
+    ) {
+        try {
+            // Check if project exists
+            const project = await prisma.project.findUnique({
+                where: { projectID }
+            });
+
+            if (!project) {
+                throw new HttpException(404, "Project not found");
+            }
+
+            // Create the call with participants in a transaction
+            const call = await prisma.$transaction(async (tx) => {
+                // Create the call
+                const newCall = await tx.call.create({
+                    data: {
+                        projectID,
+                        title,
+                        startTime,
+                        endTime,
+                        summary,
+                        isAnalyzed: false,
+                        // Create internal participants if any
+                        internalParticipants: internalParticipants.length > 0 ? {
+                            create: internalParticipants.map(userID => ({
+                                userID
+                            }))
+                        } : undefined,
+                        // Create external participants if any
+                        externalParticipants: externalParticipants.length > 0 ? {
+                            create: externalParticipants.map(clientEmail => ({
+                                clientEmail
+                            }))
+                        } : undefined
+                    },
+                    include: {
+                        internalParticipants: {
+                            include: {
+                                user: true
+                            }
+                        },
+                        externalParticipants: {
+                            include: {
+                                client: true
+                            }
+                        }
+                    }
+                });
+
+                return newCall;
+            });
+
+            return call;
+        } catch (err) {
+            if (err instanceof HttpException) {
+                throw err;
+            }
+            // Handle potential foreign key constraint errors
+            if (err && typeof err === 'object' && 'code' in err && err.code === 'P2003') {
+                throw new HttpException(400, "Invalid participant ID or email provided");
+            }
+            throw new HttpException(500, "An error occurred while creating the call: " + err);
+        }
+    }
+
 }
 
 export default CallService

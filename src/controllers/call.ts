@@ -125,6 +125,31 @@ class CallController {
     }
 }
 
+    async addCall(
+        projectID: number, 
+        title: string | null, 
+        startTime: Date | null, 
+        endTime: Date | null, 
+        summary: string | null,
+        internalParticipants: number[] = [],
+        externalParticipants: string[] = []
+    ) {
+        try {
+            const call = await this.callService.addCall(
+                projectID, 
+                title, 
+                startTime, 
+                endTime, 
+                summary,
+                internalParticipants,
+                externalParticipants
+            );
+            return call;
+        } catch (err) {
+            throw new Error("An error occurred while creating the call: " + err);
+        }
+    }
+
 }
 
 export default CallController;

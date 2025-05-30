@@ -69,6 +69,50 @@ class CallHandler {
     }
 }
 
+    public async addCall(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { 
+                projectID, 
+                title, 
+                startTime, 
+                endTime, 
+                summary,
+                internalParticipants = [],
+                externalParticipants = []
+            } = req.body;
+
+            if (!projectID) {
+                throw new HttpException(400, "Project ID is required");
+            }
+
+            // Validate participants arrays
+            if (!Array.isArray(internalParticipants)) {
+                throw new HttpException(400, "Internal participants must be an array of user IDs");
+            }
+            if (!Array.isArray(externalParticipants)) {
+                throw new HttpException(400, "External participants must be an array of client emails");
+            }
+
+            // Convert dates if provided
+            const parsedStartTime = startTime ? new Date(startTime) : null;
+            const parsedEndTime = endTime ? new Date(endTime) : null;
+
+            const call = await this.callController.addCall(
+                parseInt(projectID as string),
+                title || null,
+                parsedStartTime,
+                parsedEndTime,
+                summary || null,
+                internalParticipants.map(id => parseInt(id as string)),
+                externalParticipants
+            );
+
+            res.status(201).json(call);
+        } catch (err) {
+            next(err);
+        }
+    }
+
 }
 
 export default CallHandler;
