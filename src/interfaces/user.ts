@@ -4,7 +4,8 @@ export interface UpdateUserDTO {
     password?: string
     role?: string
     departmentID?: number
-  }
+    profilePicture?: string
+}
 
 export interface ProjectAssignment {
   projectID: number

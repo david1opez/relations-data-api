@@ -11,5 +11,6 @@ router.post("/users", userHandler.createUser.bind(userHandler))
 router.patch("/users/:userID", userHandler.updateUser.bind(userHandler)) 
 router.delete("/users/:userID", userHandler.deleteUser.bind(userHandler))
 router.post("/users/projects", userHandler.updateUserProjects.bind(userHandler))
+router.post("/upload-profile-picture", userHandler.uploadProfilePicture);
 
 export default router;

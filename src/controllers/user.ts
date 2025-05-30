@@ -1,5 +1,6 @@
 import UserService from "../services/user"
 import type { UpdateUserDTO, UpdateUserProjectsDTO } from "../interfaces/user"
+import { User } from "@prisma/client"
 
 class UserController {
   private userService: UserService
@@ -69,6 +70,10 @@ class UserController {
     } catch (err) {
       throw new Error("Error updating user projects: " + err)
     }
+  }
+
+  async uploadProfilePicture(userID: number, imageUrl: string): Promise<User> {
+    return this.userService.updateProfilePicture(userID, imageUrl)
   }
 }
 

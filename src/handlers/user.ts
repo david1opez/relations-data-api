@@ -2,6 +2,41 @@ import UserController from "../controllers/user"
 import HttpException from "../models/http-exception"
 import type { Request, Response, NextFunction } from "express"
 import type { UpdateUserDTO, UpdateUserProjectsDTO } from "../interfaces/user"
+import { User } from "@prisma/client"
+import multer from "multer"
+import path from "path"
+import fs from "fs"
+
+// Configurar multer para el almacenamiento de archivos
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = 'uploads/profile-pictures'
+        // Crear el directorio si no existe
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true })
+        }
+        cb(null, uploadDir)
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname))
+    }
+})
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
+        if (!allowedTypes.includes(file.mimetype)) {
+            cb(new Error('Invalid file type. Only JPEG, PNG and GIF are allowed'))
+            return
+        }
+        cb(null, true)
+    }
+}).single('image')
 
 class UserHandler {
   private userController: UserController
@@ -201,6 +236,41 @@ class UserHandler {
     } catch (err) {
       next(err)
     }
+  }
+
+  public uploadProfilePicture = async (req: Request, res: Response, next: NextFunction) => {
+    upload(req, res, async (err) => {
+      try {
+        if (err instanceof multer.MulterError) {
+          throw new HttpException(400, `File upload error: ${err.message}`)
+        } else if (err) {
+          throw new HttpException(400, err.message)
+        }
+
+        if (!req.file) {
+          throw new HttpException(400, 'No file uploaded')
+        }
+
+        // Obtener el userID del token o sesión
+        const userID = (req as any).user?.userID
+        if (!userID) {
+          throw new HttpException(401, 'User not authenticated')
+        }
+
+        // Construir la URL de la imagen
+        const baseUrl = process.env.BASE_URL || 'https://relations-data-api.vercel.app'
+        const imageUrl = `${baseUrl}/${req.file.path}`
+
+        const updatedUser = await this.userController.uploadProfilePicture(userID, imageUrl)
+
+        res.status(200).json({
+          message: 'Profile picture updated successfully',
+          user: updatedUser
+        })
+      } catch (error) {
+        next(error)
+      }
+    })
   }
 }
 

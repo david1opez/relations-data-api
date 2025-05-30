@@ -1,6 +1,7 @@
 import prisma from "../../client"
 import HttpException from "../models/http-exception"
 import type { UpdateUserDTO, UpdateUserProjectsDTO, ProjectAssignment } from "../interfaces/user"
+import { User } from "@prisma/client"
 
 class UserService {
   async checkLogin(userID: number, password: string) {
@@ -240,6 +241,34 @@ class UserService {
         throw err
       }
       throw new HttpException(500, `Error updating user projects: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  }
+
+  async updateProfilePicture(userID: number, imageUrl: string): Promise<User> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { userID }
+      });
+
+      if (!user) {
+        throw new HttpException(404, "User not found");
+      }
+
+      const userData: UpdateUserDTO = {
+        profilePicture: imageUrl
+      };
+
+      const updatedUser = await prisma.user.update({
+        where: { userID },
+        data: userData
+      });
+
+      return updatedUser;
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+      throw new HttpException(500, "Error updating profile picture: " + err);
     }
   }
 }

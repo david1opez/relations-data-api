@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response, ErrorRequestHandler } from 'e
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
+import path from 'path';
 
 // HELPER FUNCTIONS
 import { StartServer } from './utils/utils';
@@ -18,6 +19,8 @@ const app = express();
 // MIDDLEWARE
 app.use(cors());
 app.use(bodyParser.json({ limit: '1mb' }));
+// Servir archivos estáticos desde la carpeta uploads
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use(routes);
 
 const errorMiddleware: ErrorRequestHandler = (err, req, res, next) => {
