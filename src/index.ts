@@ -18,7 +18,7 @@ const app = express();
 
 // MIDDLEWARE
 app.use(cors({
-  origin: ['https://relations-data-api.vercel.app'],
+  origin: ['https://relations-data-api.vercel.app', 'http://localhost:3000'],
   credentials: true
 }));
 app.use(bodyParser.json({ limit: '1mb' }));
