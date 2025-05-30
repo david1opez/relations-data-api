@@ -127,7 +127,34 @@ This is a different speaker.`;
                 startTime,
                 endTime,
                 summary,
-                isAnalyzed: false
+                isAnalyzed: false,
+                internalParticipants: [
+                    {
+                        userID: 1,
+                        callID: 1,
+                        user: {
+                            name: 'Test User',
+                            userID: 1,
+                            email: 'test@example.com',
+                            password: null,
+                            role: null,
+                            profilePicture: null,
+                            departmentID: null
+                        }
+                    }
+                ],
+                externalParticipants: [
+                    {
+                        clientEmail: 'client@example.com',
+                        callID: 1,
+                        client: {
+                            name: 'Test Client',
+                            email: 'client@example.com',
+                            organization: 'Test Org',
+                            description: null
+                        }
+                    }
+                ]
             };
 
             jest.spyOn(callController['callService'], 'addCall')

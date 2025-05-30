@@ -175,7 +175,12 @@ describe('CallService', () => {
             };
 
             prismaMock.project.findUnique.mockResolvedValue(mockProject);
-            prismaMock.$transaction.mockImplementation((callback: (tx: typeof prismaMock) => Promise<any>) => callback(prismaMock));
+            prismaMock.$transaction.mockImplementation((callback: unknown) => {
+                if (typeof callback === 'function') {
+                    return Promise.resolve(callback(prismaMock));
+                }
+                return Promise.resolve(callback);
+            });
             prismaMock.call.create.mockResolvedValue(mockCall);
 
             const result = await callService.addCall(
@@ -246,7 +251,12 @@ describe('CallService', () => {
             };
 
             prismaMock.project.findUnique.mockResolvedValue(mockProject);
-            prismaMock.$transaction.mockImplementation((callback: (tx: typeof prismaMock) => Promise<any>) => callback(prismaMock));
+            prismaMock.$transaction.mockImplementation((callback: unknown) => {
+                if (typeof callback === 'function') {
+                    return Promise.resolve(callback(prismaMock));
+                }
+                return Promise.resolve(callback);
+            });
             prismaMock.call.create.mockResolvedValue(mockCall);
 
             const result = await callService.addCall(projectID, null, null, null, null);
@@ -290,7 +300,12 @@ describe('CallService', () => {
             };
 
             prismaMock.project.findUnique.mockResolvedValue(mockProject);
-            prismaMock.$transaction.mockImplementation((callback: (tx: typeof prismaMock) => Promise<any>) => callback(prismaMock));
+            prismaMock.$transaction.mockImplementation((callback: unknown) => {
+                if (typeof callback === 'function') {
+                    return Promise.resolve(callback(prismaMock));
+                }
+                return Promise.resolve(callback);
+            });
             prismaMock.call.create.mockRejectedValue({ code: 'P2003' });
 
             await expect(callService.addCall(projectID, null, null, null, null, [999]))
@@ -313,7 +328,12 @@ describe('CallService', () => {
             };
 
             prismaMock.project.findUnique.mockResolvedValue(mockProject);
-            prismaMock.$transaction.mockImplementation((callback: (tx: typeof prismaMock) => Promise<any>) => callback(prismaMock));
+            prismaMock.$transaction.mockImplementation((callback: unknown) => {
+                if (typeof callback === 'function') {
+                    return Promise.resolve(callback(prismaMock));
+                }
+                return Promise.resolve(callback);
+            });
             prismaMock.call.create.mockRejectedValue(new Error('DB error'));
 
             await expect(callService.addCall(projectID, null, null, null, null))
