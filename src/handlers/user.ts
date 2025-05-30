@@ -246,7 +246,7 @@ class UserHandler {
     }
   }
 
-  public uploadProfilePicture = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  public uploadProfilePicture = async (req: Request, res: Response, next: NextFunction) => {
     console.log('=== INICIO DE LA PETICIÓN ===');
     console.log('Headers:', req.headers);
     console.log('Content-Type:', req.headers['content-type']);
@@ -263,16 +263,16 @@ class UserHandler {
           throw new HttpException(400, 'No file uploaded')
         }
 
-        // Get userID from session/token
-        const userID = req.user?.userID; // Assuming you have middleware that sets req.user
+        // Obtener el userID de los parámetros de la URL
+        const { userID } = req.params;
         if (!userID) {
-          throw new HttpException(401, 'Unauthorized - Please log in')
+          throw new HttpException(400, 'User ID is required')
         }
 
         // Convertir userID a número
         const userIDInt = Number(userID);
         if (isNaN(userIDInt)) {
-          throw new HttpException(400, 'Invalid user ID')
+          throw new HttpException(400, 'User ID must be a number')
         }
 
         // Construir la URL de la imagen
