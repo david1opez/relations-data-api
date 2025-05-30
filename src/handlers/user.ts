@@ -7,6 +7,14 @@ import multer from "multer"
 import path from "path"
 import fs from "fs"
 
+// Define custom request type with user property
+interface AuthenticatedRequest extends Request {
+  user?: {
+    userID: number;
+    [key: string]: any;
+  };
+}
+
 // Configurar multer para el almacenamiento de archivos
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -238,7 +246,11 @@ class UserHandler {
     }
   }
 
-  public uploadProfilePicture = async (req: Request, res: Response, next: NextFunction) => {
+  public uploadProfilePicture = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    console.log('=== INICIO DE LA PETICIÓN ===');
+    console.log('Headers:', req.headers);
+    console.log('Content-Type:', req.headers['content-type']);
+    
     upload(req, res, async (err) => {
       try {
         if (err instanceof multer.MulterError) {
@@ -251,26 +263,50 @@ class UserHandler {
           throw new HttpException(400, 'No file uploaded')
         }
 
-        // Obtener el userID del token o sesión
-        const userID = (req as any).user?.userID
+        // Get userID from session/token
+        const userID = req.user?.userID; // Assuming you have middleware that sets req.user
         if (!userID) {
-          throw new HttpException(401, 'User not authenticated')
+          throw new HttpException(401, 'Unauthorized - Please log in')
+        }
+
+        // Convertir userID a número
+        const userIDInt = Number(userID);
+        if (isNaN(userIDInt)) {
+          throw new HttpException(400, 'Invalid user ID')
         }
 
         // Construir la URL de la imagen
-        const baseUrl = 'https://relations-data-api.vercel.app'
-        const imageUrl = `${baseUrl}/${req.file.path}`
+        const baseUrl = process.env.API_URL || 'http://localhost:3001';
+        const imageUrl = `${baseUrl}/${req.file.path}`;
 
-        const updatedUser = await this.userController.uploadProfilePicture(userID, imageUrl)
+        console.log('=== ACTUALIZANDO USUARIO ===');
+        console.log('UserID:', userIDInt);
+        console.log('ImageUrl:', imageUrl);
+
+        const updatedUser = await this.userController.uploadProfilePicture(userIDInt, imageUrl);
+
+        console.log('=== USUARIO ACTUALIZADO ===');
+        console.log('Usuario:', updatedUser);
 
         res.status(200).json({
           message: 'Profile picture updated successfully',
           user: updatedUser
-        })
+        });
       } catch (error) {
-        next(error)
+        console.error('=== ERROR EN EL PROCESO ===');
+        console.error(error);
+        // Si hay un error, intentar eliminar el archivo subido
+        if (req.file) {
+          try {
+            fs.unlinkSync(req.file.path);
+            console.log('Archivo temporal eliminado:', req.file.path);
+          } catch (deleteError) {
+            console.error('Error al eliminar archivo temporal:', deleteError);
+          }
+        }
+        next(error);
       }
-    })
+    });
   }
 }
 
