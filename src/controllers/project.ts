@@ -86,9 +86,11 @@ class ProjectController {
 
             // Obtener el conteo de miembros por proyecto usando Prisma
             const memberCounts = await this.prisma.$queryRaw<MemberCount[]>`
-                SELECT "projectID", COUNT("userID") as count
-                FROM "ProjectUser"
-                GROUP BY "projectID"
+                SELECT p."projectID", COUNT(up."userID") as count
+                FROM "Project" p
+                LEFT JOIN "UserProject" up ON p."projectID" = up."projectID"
+                GROUP BY p."projectID"
+                ORDER BY p."projectID"
             `;
 
             // Transformar el resultado a un objeto { projectID: count }
@@ -99,7 +101,7 @@ class ProjectController {
 
             return countsByProject;
         } catch (error) {
-            throw error;
+            throw new HttpException(500, "Error getting member counts");
         }
     }
 }
