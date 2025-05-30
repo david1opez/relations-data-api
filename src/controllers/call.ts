@@ -1,5 +1,33 @@
 import CallService from "../services/call";
 
+interface OciAnalysis {
+    documentSentiment: string;
+    lastSentence: string;
+    lastSentiment: string;
+    relevantAspects: string[];
+}
+
+interface LlmInsights {
+    motivo_llamada: string;
+    se_resolvio: boolean;
+    razon_resolucion: string;
+    estado_emocional_final: string;
+    resumen: string;
+}
+
+interface CallAnalysis {
+    ociAnalysis: OciAnalysis;
+    llmInsights: LlmInsights;
+    finalSatisfaction: string;
+}
+
+interface CallWithAnalysis {
+    callID: number;
+    startTime: Date | null;
+    endTime: Date | null;
+    analysis: CallAnalysis | null;
+}
+
 class CallController {
     private callService: CallService;
     constructor() {
@@ -150,6 +178,143 @@ class CallController {
         }
     }
 
+    async getCallHistory(projectID: number, interval: 'daily' | 'weekly' | 'monthly') {
+        try {
+            const calls = await this.callService.getCallHistory(projectID) as CallWithAnalysis[];
+
+            if (calls.length === 0) {
+                return {
+                    intervals: [],
+                    averageDurations: [],
+                    positiveSentimentPercentages: [],
+                    resolvedPercentages: []
+                };
+            }
+
+            // Filter out calls without start times and sort by start time
+            const validCalls = calls.filter(call => call.startTime)
+                .sort((a, b) => new Date(a.startTime!).getTime() - new Date(b.startTime!).getTime());
+
+            if (validCalls.length === 0) {
+                return {
+                    intervals: [],
+                    averageDurations: [],
+                    positiveSentimentPercentages: [],
+                    resolvedPercentages: []
+                };
+            }
+
+            // Get the first and last dates
+            const firstDate = new Date(validCalls[0].startTime!);
+            const lastDate = new Date(validCalls[validCalls.length - 1].startTime!);
+
+            // Generate all intervals between first and last date
+            const intervals: string[] = [];
+            let currentDate = new Date(firstDate);
+
+            // Helper function to get interval key for a date
+            const getIntervalKey = (date: Date): string => {
+                switch (interval) {
+                    case 'daily':
+                        return date.toISOString().split('T')[0];
+                    case 'weekly': {
+                        // Get the Monday of the week
+                        const day = date.getDay();
+                        const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+                        const monday = new Date(date);
+                        monday.setDate(diff);
+                        return monday.toISOString().split('T')[0];
+                    }
+                    case 'monthly':
+                        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                }
+            };
+
+            // Helper function to increment date based on interval
+            const incrementDate = (date: Date): void => {
+                switch (interval) {
+                    case 'daily':
+                        date.setDate(date.getDate() + 1);
+                        break;
+                    case 'weekly':
+                        date.setDate(date.getDate() + 7);
+                        break;
+                    case 'monthly':
+                        date.setMonth(date.getMonth() + 1);
+                        break;
+                }
+            };
+
+            // Generate intervals until we reach or pass the last date
+            while (currentDate <= lastDate) {
+                const intervalKey = getIntervalKey(currentDate);
+                if (!intervals.includes(intervalKey)) {
+                    intervals.push(intervalKey);
+                }
+                incrementDate(currentDate);
+            }
+
+
+            const lastIntervalKey = getIntervalKey(lastDate);
+            if (!intervals.includes(lastIntervalKey)) {
+                intervals.push(lastIntervalKey);
+            }
+            
+
+            // Group calls by interval
+            const groupedCalls = new Map<string, typeof validCalls>();
+            intervals.forEach(intervalKey => {
+                groupedCalls.set(intervalKey, []);
+            });
+
+            validCalls.forEach(call => {
+                const intervalKey = getIntervalKey(new Date(call.startTime!));
+                groupedCalls.get(intervalKey)?.push(call);
+            });
+
+            // Process each interval
+            const averageDurations: number[] = [];
+            const positiveSentimentPercentages: number[] = [];
+            const resolvedPercentages: number[] = [];
+
+            for (const intervalKey of intervals) {
+                const intervalCalls = groupedCalls.get(intervalKey) || [];
+
+                // Calculate metrics for this interval
+                const callDurations = intervalCalls
+                    .filter(call => call.endTime)
+                    .map(call => {
+                        return (new Date(call.endTime!).getTime() - new Date(call.startTime!).getTime()) / (1000 * 60);
+                    })
+                    .filter(duration => duration > 0);
+
+                const averageDuration = callDurations.length > 0 
+                    ? callDurations.reduce((a, b) => a + b, 0) / callDurations.length 
+                    : 0;
+
+                const positiveSentimentCount = intervalCalls.filter(
+                    call => call.analysis?.ociAnalysis?.documentSentiment === "Positive"
+                ).length;
+
+                const resolvedCount = intervalCalls.filter(
+                    call => call.analysis?.llmInsights?.se_resolvio
+                ).length;
+
+                averageDurations.push(averageDuration);
+                positiveSentimentPercentages.push(intervalCalls.length > 0 ? (positiveSentimentCount / intervalCalls.length) * 100 : 0);
+                resolvedPercentages.push(intervalCalls.length > 0 ? (resolvedCount / intervalCalls.length) * 100 : 0);
+            }
+
+            return {
+                intervals,
+                averageDurations,
+                positiveSentimentPercentages,
+                resolvedPercentages
+            };
+        } catch (err) {
+            throw new Error("Error fetching call history: " + err);
+        }
+    }
 }
 
 export default CallController;

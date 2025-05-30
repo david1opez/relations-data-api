@@ -422,4 +422,119 @@ describe('CallHandler', () => {
             expect(nextFunction).toHaveBeenCalledWith(error);
         });
     });
+
+    describe('getCallHistory', () => {
+        const mockHistory = {
+            intervals: ['2024-01-01', '2024-01-02'],
+            averageDurations: [45, 60],
+            positiveSentimentPercentages: [75, 50],
+            resolvedPercentages: [80, 60]
+        };
+
+        beforeEach(() => {
+            jest.spyOn(callHandler['callController'], 'getCallHistory')
+                .mockResolvedValue(mockHistory);
+        });
+
+        it('should return 400 when projectID is missing', async () => {
+            mockRequest = {
+                query: {}
+            };
+
+            await callHandler.getCallHistory(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(nextFunction).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    errorCode: 400,
+                    message: 'Project ID is required'
+                })
+            );
+        });
+
+        it('should return 400 when interval is missing', async () => {
+            mockRequest = {
+                query: { projectID: '1' }
+            };
+
+            await callHandler.getCallHistory(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(nextFunction).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    errorCode: 400,
+                    message: 'Valid interval (daily, weekly, or monthly) is required'
+                })
+            );
+        });
+
+        it('should return 400 when interval is invalid', async () => {
+            mockRequest = {
+                query: { 
+                    projectID: '1',
+                    interval: 'invalid'
+                }
+            };
+
+            await callHandler.getCallHistory(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(nextFunction).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    errorCode: 400,
+                    message: 'Valid interval (daily, weekly, or monthly) is required'
+                })
+            );
+        });
+
+        it('should return 200 with history data when successful', async () => {
+            mockRequest = {
+                query: { 
+                    projectID: '1',
+                    interval: 'daily'
+                }
+            };
+
+            await callHandler.getCallHistory(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith(mockHistory);
+            expect(callHandler['callController'].getCallHistory)
+                .toHaveBeenCalledWith(1, 'daily');
+        });
+
+        it('should pass error to next function when controller throws', async () => {
+            mockRequest = {
+                query: { 
+                    projectID: '1',
+                    interval: 'daily'
+                }
+            };
+
+            const error = new Error('Controller error');
+            jest.spyOn(callHandler['callController'], 'getCallHistory')
+                .mockRejectedValue(error);
+
+            await callHandler.getCallHistory(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(nextFunction).toHaveBeenCalledWith(error);
+        });
+    });
 });

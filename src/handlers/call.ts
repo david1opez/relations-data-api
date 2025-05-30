@@ -113,6 +113,29 @@ class CallHandler {
         }
     }
 
+    public async getCallHistory(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { projectID, interval } = req.query;
+            
+            if (!projectID) {
+                throw new HttpException(400, "Project ID is required");
+            }
+
+            if (!interval || !['daily', 'weekly', 'monthly'].includes(interval as string)) {
+                throw new HttpException(400, "Valid interval (daily, weekly, or monthly) is required");
+            }
+
+            const history = await this.callController.getCallHistory(
+                parseInt(projectID as string),
+                interval as 'daily' | 'weekly' | 'monthly'
+            );
+
+            res.status(200).json(history);
+        } catch (err) {
+            next(err);
+        }
+    }
+
 }
 
 export default CallHandler;

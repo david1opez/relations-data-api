@@ -341,4 +341,135 @@ describe('CallService', () => {
                 .toThrow(HttpException);
         });
     });
+
+    describe('getCallHistory', () => {
+        const mockCalls = [
+            {
+                callID: 1,
+                title: null,
+                startTime: new Date('2024-01-03T10:00:00Z'),
+                endTime: new Date('2024-01-03T10:30:00Z'),
+                summary: null,
+                projectID: 1,
+                isAnalyzed: true
+            },
+            {
+                callID: 2,
+                title: null,
+                startTime: new Date('2024-01-04T14:00:00Z'),
+                endTime: new Date('2024-01-04T15:00:00Z'),
+                summary: null,
+                projectID: 1,
+                isAnalyzed: true
+            }
+        ];
+
+        const mockApiResponse = {
+            results: [
+                {
+                    _id: "6838e71de3294e09a2816576",
+                    callID: 1,
+                    timestamp: "2024-01-03T10:30:00Z",
+                    originalText: "",
+                    resultado: {
+                        ociAnalysis: {
+                            documentSentiment: "Positive",
+                            lastSentence: "Thank you everyone for your participation today.",
+                            lastSentiment: "Neutral",
+                            relevantAspects: []
+                        },
+                        llmInsights: {
+                            motivo_llamada: "Support request",
+                            se_resolvio: true,
+                            razon_resolucion: "Issue fixed",
+                            estado_emocional_final: "Satisfied",
+                            resumen: "Customer issue resolved"
+                        },
+                        finalSatisfaction: "Positiva"
+                    }
+                },
+                {
+                    _id: "6838f83deaa36674cea7f432",
+                    callID: 2,
+                    timestamp: "2024-01-04T15:00:00Z",
+                    originalText: "",
+                    resultado: {
+                        ociAnalysis: {
+                            documentSentiment: "Positive",
+                            lastSentence: "Thank you everyone for your participation today.",
+                            lastSentiment: "Neutral",
+                            relevantAspects: []
+                        },
+                        llmInsights: {
+                            motivo_llamada: "Question",
+                            se_resolvio: false,
+                            razon_resolucion: "Pending follow-up",
+                            estado_emocional_final: "Neutral",
+                            resumen: "Customer question answered"
+                        },
+                        finalSatisfaction: "Positiva"
+                    }
+                }
+            ]
+        };
+
+        beforeEach(() => {
+            prismaMock.call.findMany.mockResolvedValue(mockCalls);
+            // Mock fetch globally
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve(mockApiResponse)
+            });
+        });
+
+        afterEach(() => {
+            jest.restoreAllMocks();
+        });
+
+        it('should return empty array when no calls exist', async () => {
+            prismaMock.call.findMany.mockResolvedValue([]);
+
+            const result = await callService.getCallHistory(1);
+            expect(result).toEqual([]);
+            expect(global.fetch).not.toHaveBeenCalled();
+        });
+
+        it('should return calls with analysis data', async () => {
+            const result = await callService.getCallHistory(1);
+
+            expect(global.fetch).toHaveBeenCalledWith(
+                'https://x5fruv6w29.execute-api.us-east-2.amazonaws.com/analysis?callID=1,2'
+            );
+            expect(result).toHaveLength(2);
+            expect(result[0]).toEqual({
+                ...mockCalls[0],
+                analysis: mockApiResponse.results[0].resultado
+            });
+            expect(result[1]).toEqual({
+                ...mockCalls[1],
+                analysis: mockApiResponse.results[1].resultado
+            });
+        });
+
+        it('should throw HttpException when API call fails', async () => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: false,
+                status: 500,
+                statusText: 'Internal Server Error'
+            });
+
+            await expect(callService.getCallHistory(1))
+                .rejects
+                .toThrow(HttpException);
+        });
+
+        it('should throw HttpException when database query fails', async () => {
+            prismaMock.call.findMany.mockRejectedValue(new Error('DB error'));
+
+            await expect(callService.getCallHistory(1))
+                .rejects
+                .toThrow(HttpException);
+            expect(global.fetch).not.toHaveBeenCalled();
+        });
+    });
 });

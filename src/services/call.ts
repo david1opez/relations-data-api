@@ -176,6 +176,57 @@ class CallService {
         }
     }
 
+    async getCallHistory(projectID: number) {
+        try {
+            // Get all analyzed calls for the project
+            const calls = await prisma.call.findMany({
+                where: { 
+                    projectID: projectID,
+                    isAnalyzed: true
+                },
+                select: {
+                    callID: true,
+                    startTime: true,
+                    endTime: true
+                },
+                orderBy: {
+                    startTime: 'asc'
+                }
+            });
+
+            if (calls.length === 0) {
+                return [];
+            }
+
+            // Construct the API URL with callIDs
+            const callIds = calls.map(call => call.callID).join(',');
+            const apiUrl = `https://x5fruv6w29.execute-api.us-east-2.amazonaws.com/analysis?callID=${callIds}`;
+            
+            // Make the API call
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new HttpException(response.status, `API call failed: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            
+            // Create a map of callID to analysis results for easy lookup
+            const analysisMap = new Map(
+                data.results.map((result: any) => [result.callID, result.resultado])
+            );
+
+            // Return combined data
+            return calls.map(call => ({
+                ...call,
+                analysis: analysisMap.get(call.callID) || null
+            }));
+        } catch (err) {
+            if (err instanceof HttpException) {
+                throw err;
+            }
+            throw new HttpException(500, "Error fetching call history: " + err);
+        }
+    }
 }
 
 export default CallService
