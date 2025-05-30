@@ -1,12 +1,15 @@
 import HttpException from '../models/http-exception';
 import ProjectService from '../services/project';
 import { CreateProjectDTO, UpdateProjectUsersDTO } from '../interfaces/projects';
+import { PrismaClient } from "@prisma/client"
 
 class ProjectController {
     private projectService: ProjectService;
+    private prisma: PrismaClient;
 
     constructor() {
         this.projectService = new ProjectService();
+        this.prisma = new PrismaClient();
     }
 
     async getAllProjects() {
@@ -71,6 +74,32 @@ class ProjectController {
                 throw err;
             }
             throw new HttpException(500, "Error updating project users: " + err);
+        }
+    }
+
+    public async getMembersCount() {
+        try {
+            type MemberCount = {
+                projectID: number;
+                count: string;
+            };
+
+            // Obtener el conteo de miembros por proyecto usando Prisma
+            const memberCounts = await this.prisma.$queryRaw<MemberCount[]>`
+                SELECT "projectID", COUNT("userID") as count
+                FROM "ProjectUser"
+                GROUP BY "projectID"
+            `;
+
+            // Transformar el resultado a un objeto { projectID: count }
+            const countsByProject = memberCounts.reduce((acc: Record<number, number>, curr: MemberCount) => ({
+                ...acc,
+                [curr.projectID]: Number(curr.count)
+            }), {});
+
+            return countsByProject;
+        } catch (error) {
+            throw error;
         }
     }
 }

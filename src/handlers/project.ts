@@ -121,5 +121,15 @@ class ProjectHandler {
           next(err)
         }
       }
+
+    public async getMembersCount(req: Request, res: Response, next: NextFunction) {
+        try {
+            const counts = await this.projectController.getMembersCount();
+            res.status(200).json(counts);
+        } catch (err) {
+            next(err);
+        }
     }
+}
+
 export default ProjectHandler;
