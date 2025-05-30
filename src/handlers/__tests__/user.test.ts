@@ -2,12 +2,25 @@ import UserHandler from "../user"
 import UserController from "../../controllers/user"
 import HttpException from "../../models/http-exception"
 import type { Request, Response } from "express"
+import { User } from "@prisma/client"
+import path from "path"
+import fs from "fs"
+import { Readable } from 'stream'
+
+// Import or define AuthenticatedRequest
+interface AuthenticatedRequest extends Request {
+  user?: {
+    userID: number;
+    name: string;
+    [key: string]: any;
+  };
+}
 
 jest.mock("../../controllers/user")
 
 describe("UserHandler", () => {
   let userHandler: UserHandler
-  let mockRequest: Partial<Request>
+  let mockRequest: Partial<AuthenticatedRequest>
   let mockResponse: Partial<Response>
   let nextFunction: jest.Mock
 
@@ -368,6 +381,112 @@ describe("UserHandler", () => {
       )
 
       expect(nextFunction).toHaveBeenCalledWith(mockError)
+    })
+  })
+
+  describe("uploadProfilePicture", () => {
+    const testImagePath = path.join(__dirname, "../../../tests/RoadMap.png")
+    
+    it("should upload profile picture successfully", async () => {
+      // Crear un mock del archivo
+      const mockFile = {
+        fieldname: 'image',
+        originalname: 'RoadMap.png',
+        encoding: '7bit',
+        mimetype: 'image/png',
+        destination: 'uploads/profile-pictures',
+        filename: 'profile-123456789.png',
+        path: 'uploads/profile-pictures/profile-123456789.png',
+        size: fs.statSync(testImagePath).size,
+        stream: new Readable(),
+        buffer: Buffer.from([])
+      }
+
+      // Mock del request con el archivo y usuario autenticado
+      mockRequest = {
+        file: mockFile,
+        user: {
+          userID: 1,
+          name: "Test User"
+        },
+        headers: {
+          'content-type': 'multipart/form-data',
+        }
+      }
+
+      // Mock de la respuesta del controlador
+      const mockUpdatedUser = {
+        userID: 1,
+        name: "Test User",
+        email: "test@example.com",
+        password: "password123",
+        role: "user",
+        departmentID: null,
+        profilePicture: "http://localhost:3001/uploads/profile-pictures/profile-123456789.png",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      jest.spyOn(userHandler["userController"], "uploadProfilePicture")
+        .mockResolvedValue(mockUpdatedUser)
+
+      await userHandler.uploadProfilePicture(mockRequest as AuthenticatedRequest, mockResponse as Response, nextFunction)
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200)
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        message: "Profile picture updated successfully",
+        user: mockUpdatedUser
+      })
+    })
+
+    it("should handle unauthorized request", async () => {
+      mockRequest = {
+        file: {
+          fieldname: 'image',
+          originalname: 'test.png',
+          encoding: '7bit',
+          mimetype: 'image/png',
+          destination: 'uploads/profile-pictures',
+          filename: 'test.png',
+          path: 'uploads/profile-pictures/test.png',
+          size: 1024,
+          stream: new Readable(),
+          buffer: Buffer.from([])
+        },
+        headers: {
+          'content-type': 'multipart/form-data',
+        },
+        user: undefined // Usuario no autenticado
+      }
+
+      await userHandler.uploadProfilePicture(mockRequest as AuthenticatedRequest, mockResponse as Response, nextFunction)
+
+      expect(nextFunction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Unauthorized - Please log in"
+        })
+      )
+    })
+
+    it("should handle missing file", async () => {
+      mockRequest = {
+        file: undefined,
+        headers: {
+          'content-type': 'multipart/form-data',
+        },
+        user: {
+          userID: 1,
+          name: "Test User"
+        }
+      }
+
+      await userHandler.uploadProfilePicture(mockRequest as AuthenticatedRequest, mockResponse as Response, nextFunction)
+
+      expect(nextFunction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "No file uploaded"
+        })
+      )
     })
   })
 })
