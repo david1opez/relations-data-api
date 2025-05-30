@@ -130,6 +130,17 @@ class ProjectHandler {
             next(err);
         }
     }
+
+    public async getProjectMembersCount(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const projectID = Number.parseInt(id, 10);
+            const count = await this.projectController.getProjectMembersCount(projectID);
+            res.status(200).json(count);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export default ProjectHandler;

@@ -104,6 +104,42 @@ class ProjectController {
             throw new HttpException(500, "Error getting member counts");
         }
     }
+
+    public async getProjectMembersCount(projectID: number) {
+        try {
+            type MemberCount = {
+                count: string;
+            };
+
+            // Verificar si el proyecto existe
+            const project = await this.prisma.project.findUnique({
+                where: { projectID }
+            });
+
+            if (!project) {
+                throw new HttpException(404, "Project not found");
+            }
+
+            // Obtener el conteo de miembros para el proyecto específico
+            const result = await this.prisma.$queryRaw<MemberCount[]>`
+                SELECT COUNT(up."userID") as count
+                FROM "Project" p
+                LEFT JOIN "UserProject" up ON p."projectID" = up."projectID"
+                WHERE p."projectID" = ${projectID}
+                GROUP BY p."projectID"
+            `;
+
+            // Si no hay resultados, significa que el proyecto no tiene miembros
+            const count = result.length > 0 ? Number(result[0].count) : 0;
+
+            return { count };
+        } catch (error) {
+            if (error instanceof HttpException) {
+                throw error;
+            }
+            throw new HttpException(500, "Error getting project member count");
+        }
+    }
 }
 
 export default ProjectController;
