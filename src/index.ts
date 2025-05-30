@@ -17,7 +17,10 @@ dotenv.config();
 const app = express();
 
 // MIDDLEWARE
-app.use(cors());
+app.use(cors({
+  origin: ['https://relations-data-api.vercel.app'],
+  credentials: true
+}));
 app.use(bodyParser.json({ limit: '1mb' }));
 // Servir archivos estáticos desde la carpeta uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

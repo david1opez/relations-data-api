@@ -258,7 +258,7 @@ class UserHandler {
         }
 
         // Construir la URL de la imagen
-        const baseUrl = process.env.BASE_URL || 'https://relations-data-api.vercel.app'
+        const baseUrl = 'https://relations-data-api.vercel.app'
         const imageUrl = `${baseUrl}/${req.file.path}`
 
         const updatedUser = await this.userController.uploadProfilePicture(userID, imageUrl)
