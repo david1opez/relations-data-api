@@ -351,7 +351,10 @@ describe('CallService', () => {
                 endTime: new Date('2024-01-03T10:30:00Z'),
                 summary: null,
                 projectID: 1,
-                isAnalyzed: true
+                isAnalyzed: true,
+                internalParticipants: [
+                    { userID: 1, callID: 1 }
+                ]
             },
             {
                 callID: 2,
@@ -360,7 +363,10 @@ describe('CallService', () => {
                 endTime: new Date('2024-01-04T15:00:00Z'),
                 summary: null,
                 projectID: 1,
-                isAnalyzed: true
+                isAnalyzed: true,
+                internalParticipants: [
+                    { userID: 2, callID: 2 }
+                ]
             }
         ];
 
@@ -424,6 +430,58 @@ describe('CallService', () => {
 
         afterEach(() => {
             jest.restoreAllMocks();
+        });
+
+        it('should filter calls by userID when provided', async () => {
+            const userID = 1;
+            const filteredCalls = [mockCalls[0]]; // Only the first call has userID 1
+            prismaMock.call.findMany.mockResolvedValue(filteredCalls);
+
+            const result = await callService.getCallHistory(1, userID);
+
+            expect(prismaMock.call.findMany).toHaveBeenCalledWith({
+                where: {
+                    projectID: 1,
+                    isAnalyzed: true,
+                    internalParticipants: {
+                        some: {
+                            userID: userID
+                        }
+                    }
+                },
+                select: {
+                    callID: true,
+                    startTime: true,
+                    endTime: true
+                },
+                orderBy: {
+                    startTime: 'asc'
+                }
+            });
+
+            expect(result).toHaveLength(1);
+            expect(result[0].callID).toBe(1);
+        });
+
+        it('should not filter by userID when not provided', async () => {
+            const result = await callService.getCallHistory(1);
+
+            expect(prismaMock.call.findMany).toHaveBeenCalledWith({
+                where: {
+                    projectID: 1,
+                    isAnalyzed: true
+                },
+                select: {
+                    callID: true,
+                    startTime: true,
+                    endTime: true
+                },
+                orderBy: {
+                    startTime: 'asc'
+                }
+            });
+
+            expect(result).toHaveLength(2);
         });
 
         it('should return empty array when no calls exist', async () => {

@@ -178,9 +178,9 @@ class CallController {
         }
     }
 
-    async getCallHistory(projectID: number, interval: 'daily' | 'weekly' | 'monthly') {
+    async getCallHistory(projectID: number, interval: 'daily' | 'weekly' | 'monthly', userID?: number) {
         try {
-            const calls = await this.callService.getCallHistory(projectID) as CallWithAnalysis[];
+            const calls = await this.callService.getCallHistory(projectID, userID) as CallWithAnalysis[];
 
             if (calls.length === 0) {
                 return {

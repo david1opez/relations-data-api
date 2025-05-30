@@ -115,7 +115,7 @@ class CallHandler {
 
     public async getCallHistory(req: Request, res: Response, next: NextFunction) {
         try {
-            const { projectID, interval } = req.query;
+            const { projectID, interval, userID } = req.query;
             
             if (!projectID) {
                 throw new HttpException(400, "Project ID is required");
@@ -127,7 +127,8 @@ class CallHandler {
 
             const history = await this.callController.getCallHistory(
                 parseInt(projectID as string),
-                interval as 'daily' | 'weekly' | 'monthly'
+                interval as 'daily' | 'weekly' | 'monthly',
+                userID ? parseInt(userID as string) : undefined
             );
 
             res.status(200).json(history);

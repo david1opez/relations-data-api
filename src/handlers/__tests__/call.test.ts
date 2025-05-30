@@ -496,7 +496,28 @@ describe('CallHandler', () => {
             );
         });
 
-        it('should return 200 with history data when successful', async () => {
+        it('should return 200 with history data when successful with userID', async () => {
+            mockRequest = {
+                query: { 
+                    projectID: '1',
+                    interval: 'daily',
+                    userID: '123'
+                }
+            };
+
+            await callHandler.getCallHistory(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith(mockHistory);
+            expect(callHandler['callController'].getCallHistory)
+                .toHaveBeenCalledWith(1, 'daily', 123);
+        });
+
+        it('should return 200 with history data when successful without userID', async () => {
             mockRequest = {
                 query: { 
                     projectID: '1',
@@ -513,7 +534,7 @@ describe('CallHandler', () => {
             expect(mockResponse.status).toHaveBeenCalledWith(200);
             expect(mockResponse.json).toHaveBeenCalledWith(mockHistory);
             expect(callHandler['callController'].getCallHistory)
-                .toHaveBeenCalledWith(1, 'daily');
+                .toHaveBeenCalledWith(1, 'daily', undefined);
         });
 
         it('should pass error to next function when controller throws', async () => {

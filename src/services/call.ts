@@ -176,13 +176,20 @@ class CallService {
         }
     }
 
-    async getCallHistory(projectID: number) {
+    async getCallHistory(projectID: number, userID?: number) {
         try {
             // Get all analyzed calls for the project
             const calls = await prisma.call.findMany({
                 where: { 
                     projectID: projectID,
-                    isAnalyzed: true
+                    isAnalyzed: true,
+                    ...(userID ? {
+                        internalParticipants: {
+                            some: {
+                                userID: userID
+                            }
+                        }
+                    } : {})
                 },
                 select: {
                     callID: true,
