@@ -116,6 +116,15 @@ class CallController {
             throw new Error("An error occurred while deleting the call: " + err);
         }
     }
+
+    async markCallAsAnalyzed(callID: number) {
+    try {
+        return await this.callService.markCallAsAnalyzed(callID);
+    } catch (err) {
+        throw new Error("An error occurred while marking the call as analyzed: " + err);
+    }
+}
+
 }
 
 export default CallController;

@@ -78,6 +78,31 @@ class CallService {
             throw new HttpException(500, "An error occurred while deleting the call: " + err);
         }
     }
+
+    async markCallAsAnalyzed(callID: number) {
+    try {
+        const call = await prisma.call.findUnique({ where: { callID } });
+
+        if (!call) {
+            throw new HttpException(404, "Call not found");
+        }
+
+        const updatedCall = await prisma.call.update({
+            where: { callID },
+            data: {
+                isAnalyzed: true,
+            },
+        });
+
+        return { message: "Call marked as analyzed", call: updatedCall };
+    } catch (err) {
+        if (err instanceof HttpException) {
+            throw err;
+        }
+        throw new HttpException(500, "An error occurred while updating the call: " + err);
+    }
+}
+
 }
 
 export default CallService

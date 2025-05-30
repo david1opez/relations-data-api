@@ -53,6 +53,22 @@ class CallHandler {
             next(err);
         }
     }
+
+    public async markCallAsAnalyzed(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { callID } = req.body;
+
+        if (!callID) {
+            throw new HttpException(400, "Call ID is required");
+        }
+
+        const result = await this.callController.markCallAsAnalyzed(callID);
+        res.status(200).json(result);
+    } catch (err) {
+        next(err);
+    }
+}
+
 }
 
 export default CallHandler;
