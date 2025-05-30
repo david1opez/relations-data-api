@@ -7,9 +7,9 @@ class ProjectController {
     private projectService: ProjectService;
     private prisma: PrismaClient;
 
-    constructor() {
+    constructor(prismaClient: PrismaClient = new PrismaClient()) {
         this.projectService = new ProjectService();
-        this.prisma = new PrismaClient();
+        this.prisma = prismaClient;
     }
 
     async getAllProjects() {
@@ -138,6 +138,27 @@ class ProjectController {
                 throw error;
             }
             throw new HttpException(500, "Error getting project member count");
+        }
+    }
+
+    public async getProjectUsers(projectID: number) {
+        try {
+            // Use the injected prisma client (which will be mocked in tests)
+            const project = await this.prisma.project.findUnique({
+                where: { projectID }
+            });
+
+            if (!project) {
+                throw new HttpException(404, "Project not found");
+            }
+
+            const users = await this.projectService.getProjectUsers(projectID);
+            return users;
+        } catch (error) {
+            if (error instanceof HttpException) {
+                throw error;
+            }
+            throw new HttpException(500, "Error getting project users");
         }
     }
 }

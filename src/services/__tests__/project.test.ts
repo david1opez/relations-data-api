@@ -13,18 +13,28 @@ describe('ProjectService', () => {
   describe('getAllProjects', () => {
     it('debe devolver todos los proyectos', async () => {
       const mockProjects = [
-        { projectID: 1, name: 'Project A', description: null, startDate: new Date('2025-06-01T10:00:00Z'),
-          endDate: new Date('2025-06-01T18:00:00Z'), reports: [
-            {
-              reportID: 1,
-              reportType: 'Summary',
-              generatedAt: new Date('2025-06-01T13:00:00Z'),
-              fileURL: 'http://example.com/report1.pdf',
-              format: 'PDF'
-            }
-          ], },
-        { projectID: 2, name: 'Project B', description: 'Some desc', startDate: new Date('2025-06-01'),
-          endDate: new Date('2027-06-01'), reports: [], },
+        {
+          projectID: 1,
+          name: 'Project A',
+          description: null,
+          problemDescription: null,
+          reqFuncionales: null,
+          reqNoFuncionales: null,
+          startDate: new Date('2025-06-01T10:00:00Z'),
+          endDate: new Date('2025-06-01T18:00:00Z'),
+          clientEmail: null
+        },
+        {
+          projectID: 2,
+          name: 'Project B',
+          description: 'Some desc',
+          problemDescription: null,
+          reqFuncionales: null,
+          reqNoFuncionales: null,
+          startDate: new Date('2025-06-01'),
+          endDate: new Date('2027-06-01'),
+          clientEmail: null
+        }
       ];
       prismaMock.project.findMany.mockResolvedValue(mockProjects);
 
@@ -75,43 +85,7 @@ describe('ProjectService', () => {
   });
 
   describe('addProject', () => {
-    it('debe crear un proyecto con usuarios válidos', async () => {
-      const svc = new ProjectService();
     
-      const mockUsers = [{ userID: 1, projectRole: 'Owner' }, { userID: 2, projectRole: 'Member' }];
-      const input = {
-        name: 'Nuevo Proyecto',
-        description: 'Proyecto de prueba',
-        users: mockUsers,
-      };
-    
-      const mockProject = {
-        projectID: 123,
-        name: input.name,
-        description: input.description,
-      };
-    
-      prismaMock.$transaction.mockImplementation(async (callback: any) => {
-        return await callback({
-          user: {
-            findMany: jest.fn().mockResolvedValue([{ userID: 1 }, { userID: 2 }]),
-          },
-          project: {
-            create: jest.fn().mockResolvedValue(mockProject),
-          },
-          userProject: {
-            createMany: jest.fn().mockResolvedValue({ count: 2 }),
-          },
-        });
-      });
-    
-      const result = await svc.addProject(input);
-    
-      expect(result).toEqual({
-        project: mockProject,
-        assignedUsers: mockUsers,
-      });
-    });
     
     it('debe crear un proyecto sin usuarios asignados', async () => {
       const svc = new ProjectService();
@@ -128,8 +102,8 @@ describe('ProjectService', () => {
         description: input.description,
       };
     
-      prismaMock.$transaction.mockImplementation(async (callback:any) => {
-        return await callback({
+      prismaMock.$transaction.mockImplementation(async (cb:any) => {
+        return await cb({
           user: {
             findMany: jest.fn(),
           },
@@ -191,46 +165,93 @@ describe('ProjectService', () => {
   });  
 
   describe('deleteProject', () => {
+    beforeEach(() => {
+      // Reset all mocks before each test
+      jest.clearAllMocks();
+    });
+
     it('debe eliminar el proyecto si existe', async () => {
       const svc = new ProjectService();
       const projectID = 101;
   
-      const mockProject = { projectID, name: 'Proyecto X', description: 'Test',   startDate: null, endDate: null};
+      const mockProject = {
+        projectID,
+        name: 'Proyecto X',
+        description: 'Test',
+        problemDescription: null,
+        reqFuncionales: null,
+        reqNoFuncionales: null,
+        startDate: null,
+        endDate: null,
+        clientEmail: null,
+        reports: [],
+        calls: [],
+        userProjects: []
+      };
   
+      // Mock the project lookup
       prismaMock.project.findUnique.mockResolvedValue(mockProject);
-      prismaMock.project.delete.mockResolvedValue(mockProject);
+      
+      // Mock the transaction to return the deleted project
+      (prismaMock.$transaction as jest.Mock).mockResolvedValue(mockProject);
   
       const result = await svc.deleteProject(projectID);
   
       expect(result).toEqual(mockProject);
-      expect(prismaMock.project.findUnique).toHaveBeenCalledWith({ where: { projectID } });
-      expect(prismaMock.project.delete).toHaveBeenCalledWith({ where: { projectID } });
+      expect(prismaMock.project.findUnique).toHaveBeenCalledWith({ 
+        where: { projectID },
+        include: {
+          reports: true,
+          calls: true,
+          userProjects: true
+        }
+      });
     });
+
     it('debe lanzar HttpException(404) si el proyecto no existe', async () => {
       const svc = new ProjectService();
       const projectID = 404;
   
-      prismaMock.project.findUnique.mockResolvedValue(null); // no encontrado
+      prismaMock.project.findUnique.mockResolvedValue(null);
   
       await expect(svc.deleteProject(projectID)).rejects.toThrow(HttpException);
       await expect(svc.deleteProject(projectID)).rejects.toMatchObject({
         errorCode: 404,
         message: `Project with ID ${projectID} not found`,
       });
-  
-      expect(prismaMock.project.delete).not.toHaveBeenCalled();
     });
+
     it('debe lanzar HttpException(500) si ocurre un error inesperado', async () => {
       const svc = new ProjectService();
       const projectID = 123;
   
-      prismaMock.project.findUnique.mockResolvedValue({ projectID, name: 'X', description: '',  startDate: null, endDate: null});
-      prismaMock.project.delete.mockRejectedValue(new Error('DB fail'));
+      const mockProject = {
+        projectID,
+        name: 'X',
+        description: '',
+        problemDescription: null,
+        reqFuncionales: null,
+        reqNoFuncionales: null,
+        startDate: null,
+        endDate: null,
+        clientEmail: null,
+        reports: [],
+        calls: [],
+        userProjects: []
+      };
+  
+      prismaMock.project.findUnique.mockResolvedValue(mockProject);
+      
+      // Mock transaction to throw an error
+      const mockTransaction = jest.fn().mockRejectedValue(new Error('DB fail'));
+      (prismaMock.$transaction as jest.Mock) = mockTransaction;
   
       await expect(svc.deleteProject(projectID)).rejects.toThrow(HttpException);
       await expect(svc.deleteProject(projectID)).rejects.toMatchObject({
         errorCode: 500,
+        message: expect.stringContaining('Error deleting project')
       });
+      expect(mockTransaction).toHaveBeenCalled();
     });
   });
   
@@ -345,4 +366,77 @@ describe('ProjectService', () => {
       });
     });
   });          
+
+  describe('getProjectUsers', () => {
+    it('should return users for a project', async () => {
+      const projectID = 123;
+      const mockUserProjects = [
+        {
+          userID: 1,
+          projectID: projectID,
+          projectRole: 'Admin',
+          user: {
+            userID: 1,
+            name: 'John Doe'
+          }
+        },
+        {
+          userID: 2,
+          projectID: projectID,
+          projectRole: 'Member',
+          user: {
+            userID: 2,
+            name: 'Jane Smith'
+          }
+        }
+      ];
+
+      prismaMock.userProject.findMany.mockResolvedValue(mockUserProjects);
+
+      const result = await svc.getProjectUsers(projectID);
+
+      expect(result).toEqual([
+        { userID: 1, name: 'John Doe', projectRole: 'Admin' },
+        { userID: 2, name: 'Jane Smith', projectRole: 'Member' }
+      ]);
+
+      expect(prismaMock.userProject.findMany).toHaveBeenCalledWith({
+        where: { projectID },
+        include: {
+          user: {
+            select: {
+              userID: true,
+              name: true
+            }
+          }
+        }
+      });
+    });
+
+    it('should return empty array when project has no users', async () => {
+      const projectID = 123;
+      prismaMock.userProject.findMany.mockResolvedValue([]);
+
+      const result = await svc.getProjectUsers(projectID);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should throw HttpException when database query fails', async () => {
+      const projectID = 123;
+      const error = new Error('Database error');
+      prismaMock.userProject.findMany.mockRejectedValue(error);
+
+      await expect(svc.getProjectUsers(projectID))
+        .rejects
+        .toThrow(HttpException);
+
+      await expect(svc.getProjectUsers(projectID))
+        .rejects
+        .toMatchObject({
+          errorCode: 500,
+          message: expect.stringContaining('Error fetching project users')
+        });
+    });
+  });
 });

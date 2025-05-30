@@ -317,7 +317,37 @@ class ProjectService {
         //console.error("Error in updateProjectUsers service: ", err);
         throw new HttpException(500, "Error updating project users: " + err);
       }
-    }      
+    }
+
+    async getProjectUsers(projectID: number) {
+        try {
+            const userProjects = await prisma.userProject.findMany({
+                where: { projectID },
+                include: {
+                    user: {
+                        select: {
+                            userID: true,
+                            name: true
+                        }
+                    }
+                }
+            });
+
+            // Transform the response to only include userID and name
+            const users = userProjects.map(up => ({
+                userID: up.user.userID,
+                name: up.user.name,
+                projectRole: up.projectRole
+            }));
+
+            return users;
+        } catch (err) {
+            if (err instanceof HttpException) {
+                throw err;
+            }
+            throw new HttpException(500, "Error fetching project users: " + err);
+        }
+    }
 }
 
 export default ProjectService;

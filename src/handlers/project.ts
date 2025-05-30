@@ -141,6 +141,25 @@ class ProjectHandler {
             next(err);
         }
     }
+
+    public async getProjectUsers(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            if (!id) {
+                throw new HttpException(400, "Project ID is required");
+            }
+
+            const projectID = Number.parseInt(id, 10);
+            if (isNaN(projectID)) {
+                throw new HttpException(400, "Project ID must be a valid number");
+            }
+
+            const users = await this.projectController.getProjectUsers(projectID);
+            res.status(200).json(users);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export default ProjectHandler;

@@ -1,12 +1,13 @@
 import ProjectController from '../project';
 import { prismaMock } from '../../../tests/prismaTestClient';
 import HttpException from '../../models/http-exception';
+import { PrismaClient } from '@prisma/client';
 
 describe('ProjectController', () => {
     let projectController: ProjectController;
 
     beforeEach(() => {
-        projectController = new ProjectController();
+        projectController = new ProjectController(prismaMock as unknown as PrismaClient);
     });
 
     describe('getAllProjects', () => {
@@ -15,9 +16,13 @@ describe('ProjectController', () => {
                 { 
                     projectID: 1, 
                     name: 'Project 1', 
-                    description: 'Test project 1', 
+                    description: 'Test project 1',
+                    problemDescription: null,
+                    reqFuncionales: null,
+                    reqNoFuncionales: null,
                     startDate: null, 
                     endDate: null,
+                    clientEmail: null,
                     reports: [
                         {
                             reportID: 1,
@@ -31,9 +36,13 @@ describe('ProjectController', () => {
                 { 
                     projectID: 2, 
                     name: 'Project 2', 
-                    description: 'Test project 2', 
+                    description: 'Test project 2',
+                    problemDescription: null,
+                    reqFuncionales: null,
+                    reqNoFuncionales: null,
                     startDate: null, 
                     endDate: null,
+                    clientEmail: null,
                     reports: []
                 }
             ];
@@ -123,12 +132,22 @@ describe('ProjectController', () => {
           };
       
           const mockResult = {
-            project: { projectID: 10, name: 'Proyecto Test', description: 'Descripción', startDate: null, endDate: null },
+            project: {
+              projectID: 10,
+              name: 'Proyecto Test',
+              description: 'Descripción',
+              problemDescription: null,
+              reqFuncionales: null,
+              reqNoFuncionales: null,
+              startDate: null,
+              endDate: null,
+              clientEmail: null
+            },
             assignedUsers: input.users
           };
       
-          // Mock del método del servicio
-          const spy = jest.spyOn(projectController['projectService'], 'addProject').mockResolvedValue(mockResult);
+          const spy = jest.spyOn(projectController['projectService'], 'addProject')
+            .mockResolvedValue(mockResult);
       
           const result = await projectController.addProject(input);
       
@@ -166,7 +185,17 @@ describe('ProjectController', () => {
     describe('deleteProject', () => {
         it('debe eliminar el proyecto si el servicio lo elimina correctamente', async () => {
           const projectID = 123;
-          const mockDeleted = { projectID, name: 'X', description: 'Desc', startDate: null, endDate: null};
+          const mockDeleted = {
+            projectID,
+            name: 'X',
+            description: 'Desc',
+            problemDescription: null,
+            reqFuncionales: null,
+            reqNoFuncionales: null,
+            startDate: null,
+            endDate: null,
+            clientEmail: null
+          };
       
           const controller = new ProjectController();
           jest
@@ -271,4 +300,89 @@ describe('ProjectController', () => {
         });
       });
     });        
+
+    describe('getProjectUsers', () => {
+        const mockProject = {
+            projectID: 123,
+            name: 'Test Project',
+            description: null,
+            problemDescription: null,
+            reqFuncionales: null,
+            reqNoFuncionales: null,
+            startDate: null,
+            endDate: null,
+            clientEmail: null
+        };
+
+        beforeEach(() => {
+            prismaMock.project.findUnique.mockReset();
+        });
+
+        it('should return users when project exists', async () => {
+            const mockUsers = [
+                { userID: 1, name: 'John Doe', projectRole: 'Admin' },
+                { userID: 2, name: 'Jane Smith', projectRole: 'Member' }
+            ];
+
+            prismaMock.project.findUnique.mockResolvedValue(mockProject);
+            jest
+                .spyOn(projectController['projectService'], 'getProjectUsers')
+                .mockResolvedValue(mockUsers);
+
+            const result = await projectController.getProjectUsers(mockProject.projectID);
+
+            expect(result).toEqual(mockUsers);
+            expect(prismaMock.project.findUnique).toHaveBeenCalledWith({
+                where: { projectID: mockProject.projectID }
+            });
+        });
+
+        it('should throw HttpException(404) if project does not exist', async () => {
+            prismaMock.project.findUnique.mockResolvedValue(null);
+
+            await expect(projectController.getProjectUsers(999))
+                .rejects
+                .toThrow(HttpException);
+
+            await expect(projectController.getProjectUsers(999))
+                .rejects
+                .toMatchObject({
+                    errorCode: 404,
+                    message: 'Project not found'
+                });
+        });
+
+        it('should propagate HttpException from service', async () => {
+            const error = new HttpException(500, 'Service error');
+
+            prismaMock.project.findUnique.mockResolvedValue(mockProject);
+            jest
+                .spyOn(projectController['projectService'], 'getProjectUsers')
+                .mockRejectedValue(error);
+
+            await expect(projectController.getProjectUsers(mockProject.projectID))
+                .rejects
+                .toThrow(error);
+        });
+
+        it('should throw HttpException(500) for unexpected errors', async () => {
+            const error = new Error('Unexpected error');
+
+            prismaMock.project.findUnique.mockResolvedValue(mockProject);
+            jest
+                .spyOn(projectController['projectService'], 'getProjectUsers')
+                .mockRejectedValue(error);
+
+            await expect(projectController.getProjectUsers(mockProject.projectID))
+                .rejects
+                .toThrow(HttpException);
+
+            await expect(projectController.getProjectUsers(mockProject.projectID))
+                .rejects
+                .toMatchObject({
+                    errorCode: 500,
+                    message: 'Error getting project users'
+                });
+        });
+    });
 });

@@ -204,7 +204,17 @@ describe('ProjectHandler', () => {
   describe('deleteProject', () => {
     it('debe responder con 202 cuando el proyecto se elimina exitosamente', async () => {
       const projectID = 123;
-      const mockDeleted = { projectID, name: 'Test', description: '', startDate: null, endDate: null};
+      const mockDeleted = {
+        projectID,
+        name: 'Test',
+        description: '',
+        problemDescription: null,
+        reqFuncionales: null,
+        reqNoFuncionales: null,
+        startDate: null,
+        endDate: null,
+        clientEmail: null
+      };
   
       mockRequest = {
         params: { id: String(projectID) },
@@ -346,4 +356,89 @@ describe('ProjectHandler', () => {
       expect(nextFunction).toHaveBeenCalledWith(error);
     });
   });      
+
+  describe('getProjectUsers', () => {
+    it('should return 200 with users when project exists', async () => {
+      const projectID = 123;
+      const mockUsers = [
+        { userID: 1, name: 'John Doe', projectRole: 'Admin' },
+        { userID: 2, name: 'Jane Smith', projectRole: 'Member' }
+      ];
+
+      mockRequest = {
+        params: { id: String(projectID) }
+      };
+
+      jest
+        .spyOn(projectHandler['projectController'], 'getProjectUsers')
+        .mockResolvedValue(mockUsers);
+
+      await projectHandler.getProjectUsers(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith(mockUsers);
+      expect(nextFunction).not.toHaveBeenCalled();
+    });
+
+    it('should call next with HttpException if project ID is missing', async () => {
+      mockRequest = {
+        params: {}
+      };
+
+      await projectHandler.getProjectUsers(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      expect(nextFunction).toHaveBeenCalled();
+      const error = nextFunction.mock.calls[0][0] as HttpException;
+      expect(error).toBeInstanceOf(HttpException);
+      expect(error.errorCode).toBe(400);
+      expect(error.message).toBe('Project ID is required');
+    });
+
+    it('should call next with HttpException if project ID is invalid', async () => {
+      mockRequest = {
+        params: { id: 'invalid' }
+      };
+
+      await projectHandler.getProjectUsers(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      expect(nextFunction).toHaveBeenCalled();
+      const error = nextFunction.mock.calls[0][0] as HttpException;
+      expect(error).toBeInstanceOf(HttpException);
+      expect(error.errorCode).toBe(400);
+      expect(error.message).toBe('Project ID must be a valid number');
+    });
+
+    it('should call next with error when controller throws', async () => {
+      const projectID = 999;
+      const error = new Error('Controller failed');
+
+      mockRequest = {
+        params: { id: String(projectID) }
+      };
+
+      jest
+        .spyOn(projectHandler['projectController'], 'getProjectUsers')
+        .mockRejectedValue(error);
+
+      await projectHandler.getProjectUsers(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      expect(nextFunction).toHaveBeenCalledWith(error);
+    });
+  });
 });
