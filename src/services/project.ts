@@ -348,6 +348,88 @@ class ProjectService {
             throw new HttpException(500, "Error fetching project users: " + err);
         }
     }
+
+    async updateProject(projectID: number, updateData: Partial<CreateProjectDTO>) {
+        try {
+            return await prisma.$transaction(async (tx) => {
+                // 1. Verificar si el proyecto existe
+                const existingProject = await tx.project.findUnique({
+                    where: { projectID }
+                });
+
+                if (!existingProject) {
+                    throw new HttpException(404, "Project not found");
+                }
+
+                // 2. Actualizar el proyecto con los datos proporcionados
+                const updatedProject = await tx.project.update({
+                    where: { projectID },
+                    data: {
+                        name: updateData.name,
+                        description: updateData.description,
+                        problemDescription: updateData.problemDescription,
+                        reqFuncionales: updateData.reqFuncionales,
+                        reqNoFuncionales: updateData.reqNoFuncionales,
+                        startDate: updateData.startDate ? new Date(updateData.startDate) : undefined,
+                        endDate: updateData.endDate ? new Date(updateData.endDate) : undefined,
+                        clientEmail: updateData.client?.email
+                    }
+                });
+
+                // 3. Si hay usuarios para actualizar
+                if (updateData.users && updateData.users.length > 0) {
+                    // Verificar que todos los usuarios existen
+                    const userIDs = updateData.users.map(u => u.userID);
+                    const existingUsers = await tx.user.findMany({
+                        where: {
+                            userID: {
+                                in: userIDs
+                            }
+                        },
+                        select: {
+                            userID: true
+                        }
+                    });
+
+                    if (existingUsers.length !== userIDs.length) {
+                        throw new HttpException(400, "Some users do not exist");
+                    }
+
+                    // Eliminar relaciones existentes
+                    await tx.userProject.deleteMany({
+                        where: { projectID }
+                    });
+
+                    // Crear nuevas relaciones
+                    await tx.userProject.createMany({
+                        data: updateData.users.map(user => ({
+                            userID: user.userID,
+                            projectID: projectID,
+                            projectRole: user.projectRole
+                        }))
+                    });
+                }
+
+                // 4. Retornar el proyecto actualizado con sus relaciones
+                return await tx.project.findUnique({
+                    where: { projectID },
+                    include: {
+                        client: true,
+                        userProjects: {
+                            include: {
+                                user: true
+                            }
+                        }
+                    }
+                });
+            });
+        } catch (error) {
+            if (error instanceof HttpException) {
+                throw error;
+            }
+            throw new HttpException(500, "Error updating project: " + error);
+        }
+    }
 }
 
 export default ProjectService;

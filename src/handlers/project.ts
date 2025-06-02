@@ -160,6 +160,30 @@ class ProjectHandler {
             next(err);
         }
     }
+
+    public async updateProject(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id: notParsedProjectID } = req.params;
+            const updateData = req.body;
+
+            if (!notParsedProjectID) {
+                throw new HttpException(400, "Project ID is required");
+            }
+
+            const projectID = Number.parseInt(notParsedProjectID, 10);
+            if (isNaN(projectID)) {
+                throw new HttpException(400, "Project ID must be a valid number");
+            }
+
+            const updatedProject = await this.projectController.updateProject(projectID, updateData);
+            res.status(200).json({
+                message: "Project successfully updated",
+                project: updatedProject
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export default ProjectHandler;

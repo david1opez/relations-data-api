@@ -12,6 +12,7 @@ router.get("/user-projects", projectHandler.getUserProjects.bind(projectHandler)
 router.get("/projects/:id", projectHandler.getProjectById.bind(projectHandler));
 router.get("/projects/:id/users", projectHandler.getProjectUsers.bind(projectHandler));
 router.post("/projects", projectHandler.addProject.bind(projectHandler));
+router.patch("/projects/:id", projectHandler.updateProject.bind(projectHandler));
 router.delete("/projects/:id", projectHandler.deleteProject.bind(projectHandler));
 router.patch("/projects/:id/users", projectHandler.updateProjectUsers.bind(projectHandler));
 

@@ -161,6 +161,18 @@ class ProjectController {
             throw new HttpException(500, "Error getting project users");
         }
     }
+
+    public async updateProject(projectID: number, updateData: Partial<CreateProjectDTO>) {
+        try {
+            const updatedProject = await this.projectService.updateProject(projectID, updateData);
+            return updatedProject;
+        } catch (error) {
+            if (error instanceof HttpException) {
+                throw error;
+            }
+            throw new HttpException(500, "Error updating project");
+        }
+    }
 }
 
 export default ProjectController;
