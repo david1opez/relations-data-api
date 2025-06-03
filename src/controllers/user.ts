@@ -1,21 +1,11 @@
 import UserService from "../services/user"
 import type { UpdateUserDTO, UpdateUserProjectsDTO } from "../interfaces/user"
-import { User } from "@prisma/client"
 
 class UserController {
   private userService: UserService
 
   constructor() {
     this.userService = new UserService()
-  }
-
-  async checkLogin(userID: number, password: string) {
-    try {
-      const user = await this.userService.checkLogin(userID, password)
-      return user
-    } catch (err) {
-      throw new Error("Error checking login: " + err)
-    }
   }
 
   async getUser(userID: number) {

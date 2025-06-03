@@ -4,26 +4,6 @@ import type { UpdateUserDTO, UpdateUserProjectsDTO, ProjectAssignment } from "..
 import { User } from "@prisma/client"
 
 class UserService {
-  async checkLogin(userID: number, password: string) {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { userID: userID },
-      })
-      if (!user) {
-        throw new HttpException(404, "User not found")
-      }
-      if (user.password !== password) {
-        throw new HttpException(401, "Invalid password")
-      }
-      return user
-    } catch (err) {
-      if (err instanceof HttpException) {
-        throw err
-      }
-      throw new Error(`Error checking login: ${err}`)
-    }
-  }
-
   async getUser(userID: number) {
     try {
       const user = await prisma.user.findUnique({
