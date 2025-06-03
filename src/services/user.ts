@@ -40,7 +40,7 @@ class UserService {
     }
   }
 
-  async createUser(userData: { name: string; email: string; password?: string; role?: string; departmentID?: number }) {
+  async createUser(userData: { name: string; email: string; role?: string; departmentID?: number }) {
     try {
       // Check if user with email already exists
       const existingUser = await prisma.user.findUnique({

@@ -26,7 +26,7 @@ class UserController {
     }
   }
 
-  async createUser(userData: { name: string; email: string; password?: string; role?: string; departmentID?: number }) {
+  async createUser(userData: { name: string; email: string; role?: string; departmentID?: number }) {
     try {
       const user = await this.userService.createUser(userData)
       return user

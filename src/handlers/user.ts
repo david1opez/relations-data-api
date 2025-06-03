@@ -75,7 +75,7 @@ class UserHandler {
 
   public async createUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name, email, password, role, departmentID } = req.body
+      const { name, email, role, departmentID } = req.body
 
       if (!name || !email) {
         throw new HttpException(400, "Name and email are required")
@@ -99,7 +99,6 @@ class UserHandler {
       const userData = {
         name,
         email,
-        password,
         role,
         departmentID: departmentIDInt,
       }
