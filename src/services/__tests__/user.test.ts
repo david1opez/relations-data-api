@@ -149,7 +149,8 @@ describe("UserService", () => {
       email: "test@example.com",
       password: null,
       role: null,
-      departmentID: null
+      departmentID: null,
+      profilePicture: null
     }
     const mockProjects = [
       { projectID: 1, projectRole: "Developer" },

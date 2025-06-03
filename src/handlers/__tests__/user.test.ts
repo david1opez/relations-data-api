@@ -2,10 +2,6 @@ import UserHandler from "../user"
 import UserController from "../../controllers/user"
 import HttpException from "../../models/http-exception"
 import type { Request, Response } from "express"
-import { User } from "@prisma/client"
-import path from "path"
-import fs from "fs"
-import { Readable } from 'stream'
 
 // Import or define AuthenticatedRequest
 interface AuthenticatedRequest extends Request {

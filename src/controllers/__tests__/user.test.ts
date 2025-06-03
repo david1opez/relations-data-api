@@ -22,6 +22,7 @@ describe("UserController", () => {
         password: null,
         role: null,
         departmentID: null,
+        profilePicture: null,
       }
       mockUserService.checkLogin.mockResolvedValue(mockUser)
 
@@ -66,6 +67,7 @@ describe("UserController", () => {
         role: null,
         departmentID: null,
         department: null,
+        profilePicture: null,
       }
       mockUserService.getUser.mockResolvedValue(mockUser)
 
@@ -93,6 +95,7 @@ describe("UserController", () => {
           departmentID: null,
           department: null,
           password: null,
+          profilePicture: null,
         },
         {
           userID: 2,
@@ -102,6 +105,7 @@ describe("UserController", () => {
           departmentID: null,
           department: null,
           password: null,
+          profilePicture: null,
         },
       ]
       mockUserService.getAllUsers.mockResolvedValue(mockUsers)
@@ -127,6 +131,7 @@ describe("UserController", () => {
         password: "password123",
         role: "User",
         departmentID: 1,
+        profilePicture: "profilepicturebase64string",
       }
       const mockCreatedUser = { userID: 3, ...userData }
       mockUserService.createUser.mockResolvedValue(mockCreatedUser)
