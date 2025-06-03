@@ -71,10 +71,6 @@ class UserController {
       throw new Error("Error updating user projects: " + err)
     }
   }
-
-  async uploadProfilePicture(userID: number, imageUrl: string): Promise<User> {
-    return this.userService.updateProfilePicture(userID, imageUrl)
-  }
 }
 
 export default UserController

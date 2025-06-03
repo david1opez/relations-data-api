@@ -147,7 +147,7 @@ class UserHandler {
   public async updateUser(req: Request, res: Response, next: NextFunction) {
     try {
       const { userID } = req.params
-      const { name, email, password, role, departmentID } = req.body
+      const { name, email, password, role, departmentID, profilePicture } = req.body
 
       if (!userID) {
         throw new HttpException(400, "User ID is required")
@@ -183,6 +183,7 @@ class UserHandler {
       if (password !== undefined) userData.password = password
       if (role !== undefined) userData.role = role
       if (departmentIDInt !== undefined) userData.departmentID = departmentIDInt
+      if (profilePicture !== undefined) userData.profilePicture = profilePicture
 
       const user = await this.userController.updateUser(userIDInt, userData)
       res.status(200).json(user)
@@ -244,69 +245,6 @@ class UserHandler {
     } catch (err) {
       next(err)
     }
-  }
-
-  public uploadProfilePicture = async (req: Request, res: Response, next: NextFunction) => {
-    console.log('=== INICIO DE LA PETICIÓN ===');
-    console.log('Headers:', req.headers);
-    console.log('Content-Type:', req.headers['content-type']);
-    
-    upload(req, res, async (err) => {
-      try {
-        if (err instanceof multer.MulterError) {
-          throw new HttpException(400, `File upload error: ${err.message}`)
-        } else if (err) {
-          throw new HttpException(400, err.message)
-        }
-
-        if (!req.file) {
-          throw new HttpException(400, 'No file uploaded')
-        }
-
-        // Obtener el userID de los parámetros de la URL
-        const { userID } = req.params;
-        if (!userID) {
-          throw new HttpException(400, 'User ID is required')
-        }
-
-        // Convertir userID a número
-        const userIDInt = Number(userID);
-        if (isNaN(userIDInt)) {
-          throw new HttpException(400, 'User ID must be a number')
-        }
-
-        // Construir la URL de la imagen
-        const baseUrl = process.env.API_URL || 'http://localhost:3001';
-        const imageUrl = `${baseUrl}/${req.file.path}`;
-
-        console.log('=== ACTUALIZANDO USUARIO ===');
-        console.log('UserID:', userIDInt);
-        console.log('ImageUrl:', imageUrl);
-
-        const updatedUser = await this.userController.uploadProfilePicture(userIDInt, imageUrl);
-
-        console.log('=== USUARIO ACTUALIZADO ===');
-        console.log('Usuario:', updatedUser);
-
-        res.status(200).json({
-          message: 'Profile picture updated successfully',
-          user: updatedUser
-        });
-      } catch (error) {
-        console.error('=== ERROR EN EL PROCESO ===');
-        console.error(error);
-        // Si hay un error, intentar eliminar el archivo subido
-        if (req.file) {
-          try {
-            fs.unlinkSync(req.file.path);
-            console.log('Archivo temporal eliminado:', req.file.path);
-          } catch (deleteError) {
-            console.error('Error al eliminar archivo temporal:', deleteError);
-          }
-        }
-        next(error);
-      }
-    });
   }
 }
 
