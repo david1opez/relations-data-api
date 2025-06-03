@@ -24,6 +24,7 @@ describe("AuditLogService", () => {
         password: null,
         role: null,
         departmentID: null,
+        profilePicture: null,
       }
 
       const mockAuditLog = {
@@ -112,6 +113,7 @@ describe("AuditLogService", () => {
         password: null,
         role: null,
         departmentID: null,
+        profilePicture: null,
       }
 
       const mockAuditLogs = [
@@ -175,6 +177,10 @@ describe("AuditLogService", () => {
         description: null,
         startDate: null,
         endDate: null,
+        problemDescription: null,
+        reqFuncionales: null,
+        reqNoFuncionales: null,
+        clientEmail: "null",
       }
 
       const mockUserProjects = [
@@ -250,6 +256,10 @@ describe("AuditLogService", () => {
         description: null,
         startDate: null,
         endDate: null,
+        problemDescription: null,
+        reqFuncionales: null,
+        reqNoFuncionales: null,
+        clientEmail: null
       }
 
       prismaMock.project.findUnique.mockResolvedValue(mockProject)
