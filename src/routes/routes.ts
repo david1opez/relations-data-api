@@ -7,6 +7,7 @@ import deptRouter    from "./department";
 import MicrosoftAuth from './MicrosoftAuth';
 import clientRouter from "./client";
 import reportRouter from "./report";
+import activity from "./activity";
 
 const api = Router();
 
