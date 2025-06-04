@@ -22,18 +22,8 @@ model User {
   profilePicture String? 
   departmentID Int?
   department   Department? @relation(fields: [departmentID], references: [departmentID], onDelete: SetNull, onUpdate: Cascade)
-  auditLogs    AuditLog[]
   userProjects UserProject[]
   calls        InternalCallParticipants[]
-}
-
-model AuditLog {
-  logID       Int      @id @default(autoincrement())
-  action      String
-  dateTime    DateTime @default(now())
-  description String?
-  userID      Int?
-  user        User? @relation(fields: [userID], references: [userID], onDelete: SetNull, onUpdate: Cascade)
 }
 
 model Client {
