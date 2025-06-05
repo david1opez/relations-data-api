@@ -52,7 +52,8 @@ class UserService {
 
       const user = await prisma.user.create({
         data: userData,
-      })
+      });
+      
       return user
     } catch (err) {
       if (err instanceof HttpException) {
@@ -116,10 +117,7 @@ class UserService {
         where: { userID: userID },
       })
       
-      await prisma.auditLog.deleteMany({
-        where: { userID: userID },
-      })
-      const auditLogs = await prisma.auditLog.findMany({
+      await prisma.activityLog.deleteMany({
         where: { userID: userID },
       })
   
