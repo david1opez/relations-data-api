@@ -17,13 +17,14 @@ model User {
   userID       Int       @id @default(autoincrement())
   name         String
   email        String    @unique
-  uid          String?
+  uid          String?   @unique
   role         String?
   profilePicture String? 
   departmentID Int?
   department   Department? @relation(fields: [departmentID], references: [departmentID], onDelete: SetNull, onUpdate: Cascade)
   userProjects UserProject[]
   calls        InternalCallParticipants[]
+  activityLogs ActivityLog[]
 }
 
 model Client {
@@ -49,6 +50,7 @@ model Project {
   userProjects       UserProject[]
   calls              Call[]
   reports            Report[]
+  activityLogs       ActivityLog[]
 }
 
 model UserProject {
@@ -74,6 +76,7 @@ model Call {
   internalParticipants InternalCallParticipants[]
   externalParticipants ExternalCallParticipants[]
   reportCalls ReportCall[]
+  activityLogs ActivityLog[]
 }
 
 model InternalCallParticipants {
@@ -118,4 +121,17 @@ model ReportCall {
   call   Call    @relation(fields: [callID], references: [callID], onDelete: Cascade, onUpdate: Cascade)
 
   @@id([reportID, callID])
+}
+
+model ActivityLog {
+  activityLogID      Int      @id @default(autoincrement())
+  userID             Int
+  action             String
+  timestamp          DateTime @default(now())
+  projectID          Int?
+  callID             Int?
+
+  user               User           @relation(fields: [userID], references: [userID], onDelete: Cascade)
+  project            Project?       @relation(fields: [projectID], references: [projectID], onDelete: Cascade)
+  call               Call?          @relation(fields: [callID], references: [callID], onDelete: Cascade)
 }
