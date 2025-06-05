@@ -43,8 +43,24 @@ describe('CallHandler', () => {
             };
 
             const mockCalls = [
-                { callID: 1, title: 'Call 1', startTime: null, endTime: null, summary: null, isAnalyzed: false },
-                { callID: 2, title: 'Call 2', startTime: null, endTime: null, summary: null, isAnalyzed: false }
+                { 
+                    callID: 1, 
+                    title: 'Call 1', 
+                    startTime: null, 
+                    endTime: null, 
+                    summary: null, 
+                    isAnalyzed: false,
+                    attendees: ['user1@test.com', 'user2@test.com']
+                },
+                { 
+                    callID: 2, 
+                    title: 'Call 2', 
+                    startTime: null, 
+                    endTime: null, 
+                    summary: null, 
+                    isAnalyzed: false,
+                    attendees: ['user3@test.com']
+                }
             ];
 
             jest.spyOn(callHandler['callController'], 'getAllCalls')
@@ -100,9 +116,9 @@ describe('CallHandler', () => {
                             name: 'John Doe',
                             userID: 1,
                             email: 'john.doe@example.com',
+                            uid: 'user123',
                             role: 'Manager' as string | null,
                             departmentID: 101 as number | null,
-                            password: null,
                             profilePicture: null
                         },
                         callID: 1,
@@ -297,7 +313,7 @@ describe('CallHandler', () => {
                             name: 'User 1',
                             userID: 1,
                             email: 'user1@test.com',
-                            password: null,
+                            uid: 'user123',
                             role: null,
                             profilePicture: null,
                             departmentID: null
@@ -310,7 +326,7 @@ describe('CallHandler', () => {
                             name: 'User 2',
                             userID: 2,
                             email: 'user2@test.com',
-                            password: null,
+                            uid: 'user456',
                             role: null,
                             profilePicture: null,
                             departmentID: null

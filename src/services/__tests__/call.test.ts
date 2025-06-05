@@ -13,8 +13,54 @@ describe('CallService', () => {
         it('should return all calls for a project', async () => {
             const projectID = 1;
             const mockCalls = [
-                { callID: 1, title: 'Call 1', projectID, startTime: null, endTime: null, summary: null, isAnalyzed: false },
-                { callID: 2, title: 'Call 2', projectID, startTime: null, endTime: null, summary: null, isAnalyzed: false },
+                { 
+                    callID: 1, 
+                    title: 'Call 1', 
+                    projectID, 
+                    startTime: null, 
+                    endTime: null, 
+                    summary: null, 
+                    isAnalyzed: false,
+                    internalParticipants: [
+                        {
+                            userID: 1,
+                            callID: 1,
+                            user: {
+                                userID: 1,
+                                name: 'John Doe',
+                                email: 'john@example.com',
+                                uid: null,
+                                password: null,
+                                role: null,
+                                profilePicture: null,
+                                departmentID: null
+                            }
+                        }
+                    ],
+                    externalParticipants: [
+                        {
+                            clientEmail: 'jane@example.com',
+                            callID: 1,
+                            client: {
+                                name: 'Jane Smith',
+                                email: 'jane@example.com',
+                                organization: 'Client Corp',
+                                description: null
+                            }
+                        }
+                    ]
+                },
+                { 
+                    callID: 2, 
+                    title: 'Call 2', 
+                    projectID, 
+                    startTime: null, 
+                    endTime: null, 
+                    summary: null, 
+                    isAnalyzed: false,
+                    internalParticipants: [],
+                    externalParticipants: []
+                }
             ];
 
             prismaMock.call.findMany.mockResolvedValue(mockCalls);
@@ -46,12 +92,29 @@ describe('CallService', () => {
                 isAnalyzed: false,
                 internalParticipants: [
                     {
-                        user: { userID: 1, name: 'Internal User' }
+                        userID: 1,
+                        callID: 1,
+                        user: {
+                            userID: 1,
+                            name: 'Internal User',
+                            email: 'internal@test.com',
+                            uid: 'user123',
+                            role: null,
+                            profilePicture: null,
+                            departmentID: null
+                        }
                     }
                 ],
                 externalParticipants: [
                     {
-                        client: { email: 'client@test.com', name: 'External Client' }
+                        clientEmail: 'client@test.com',
+                        callID: 1,
+                        client: {
+                            name: 'External Client',
+                            email: 'client@test.com',
+                            organization: 'Test Org',
+                            description: null
+                        }
                     }
                 ]
             };
@@ -165,12 +228,54 @@ describe('CallService', () => {
                 summary,
                 isAnalyzed: false,
                 internalParticipants: [
-                    { userID: 1, user: { name: 'User 1' } },
-                    { userID: 2, user: { name: 'User 2' } }
+                    {
+                        userID: 1,
+                        callID: 1,
+                        user: {
+                            userID: 1,
+                            name: 'User 1',
+                            email: 'user1@test.com',
+                            uid: 'user123',
+                            role: null,
+                            profilePicture: null,
+                            departmentID: null
+                        }
+                    },
+                    {
+                        userID: 2,
+                        callID: 1,
+                        user: {
+                            userID: 2,
+                            name: 'User 2',
+                            email: 'user2@test.com',
+                            uid: 'user456',
+                            role: null,
+                            profilePicture: null,
+                            departmentID: null
+                        }
+                    }
                 ],
                 externalParticipants: [
-                    { clientEmail: 'client1@test.com', client: { name: 'Client 1' } },
-                    { clientEmail: 'client2@test.com', client: { name: 'Client 2' } }
+                    {
+                        clientEmail: 'client1@test.com',
+                        callID: 1,
+                        client: {
+                            name: 'Client 1',
+                            email: 'client1@test.com',
+                            organization: 'Org 1',
+                            description: null
+                        }
+                    },
+                    {
+                        clientEmail: 'client2@test.com',
+                        callID: 1,
+                        client: {
+                            name: 'Client 2',
+                            email: 'client2@test.com',
+                            organization: 'Org 2',
+                            description: null
+                        }
+                    }
                 ]
             };
 

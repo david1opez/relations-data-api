@@ -116,7 +116,21 @@ class CallController {
     async getAllCalls(projectID: number) { 
         try {
             const calls = await this.callService.getAllCalls(projectID);
-            return calls;
+            
+            // Transform the calls to include attendees (only names)
+            return calls.map(call => {
+                const attendees = [
+                    ...(call.internalParticipants?.map(participant => participant.user.name) || []),
+                    ...(call.externalParticipants?.map(participant => participant.client.name) || [])
+                ];
+
+                // Remove the original participant arrays and add attendees
+                const { internalParticipants, externalParticipants, ...callWithoutParticipants } = call;
+                return {
+                    ...callWithoutParticipants,
+                    attendees
+                };
+            });
         } catch (err) {
             throw new Error("Error fetching calls: " + err);
         }

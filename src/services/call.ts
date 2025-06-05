@@ -5,10 +5,21 @@ class CallService {
     async getAllCalls(projectID: number) {
         try {
             const calls = await prisma.call.findMany({
-                // Return all info except for the transcript
                 where: { projectID: projectID },
+                include: {
+                    internalParticipants: {
+                        include: {
+                            user: true,
+                        },
+                    },
+                    externalParticipants: {
+                        include: {
+                            client: true,
+                        },
+                    },
+                },
                 omit: {
-                    summary: false, 
+                    summary: false,
                     projectID: true,
                 },
             });

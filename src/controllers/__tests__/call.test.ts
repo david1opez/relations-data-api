@@ -9,17 +9,85 @@ describe('CallController', () => {
     });
 
     describe('getAllCalls', () => {
-        it('should return all calls for a project', async () => {
+        it('should return all calls for a project with attendees list', async () => {
             const projectID = 1;
             const mockCalls = [
-                { callID: 1, title: 'Call 1', projectID, startTime: null, endTime: null, summary: null, isAnalyzed: false },
-                { callID: 2, title: 'Call 2', projectID, startTime: null, endTime: null, summary: null, isAnalyzed: false }
+                { 
+                    callID: 1, 
+                    title: 'Call 1', 
+                    projectID, 
+                    startTime: null, 
+                    endTime: null, 
+                    summary: null, 
+                    isAnalyzed: false,
+                    internalParticipants: [
+                        {
+                            userID: 1,
+                            callID: 1,
+                            user: {
+                                userID: 1,
+                                name: 'John Doe',
+                                email: 'john@example.com',
+                                uid: 'user123',
+                                role: null,
+                                profilePicture: null,
+                                departmentID: null
+                            }
+                        }
+                    ],
+                    externalParticipants: [
+                        {
+                            clientEmail: 'jane@example.com',
+                            callID: 1,
+                            client: {
+                                name: 'Jane Smith',
+                                email: 'jane@example.com',
+                                organization: 'Client Corp',
+                                description: null
+                            }
+                        }
+                    ]
+                },
+                { 
+                    callID: 2, 
+                    title: 'Call 2', 
+                    projectID, 
+                    startTime: null, 
+                    endTime: null, 
+                    summary: null, 
+                    isAnalyzed: false,
+                    internalParticipants: [],
+                    externalParticipants: []
+                }
             ];
 
             prismaMock.call.findMany.mockResolvedValue(mockCalls);
 
             const result = await callController.getAllCalls(projectID);
-            expect(result).toEqual(mockCalls);
+            
+            // Verify the transformation
+            expect(result).toEqual([
+                {
+                    callID: 1,
+                    title: 'Call 1',
+                    projectID,
+                    startTime: null,
+                    endTime: null,
+                    summary: null,
+                    isAnalyzed: false,
+                    attendees: ['John Doe', 'Jane Smith']
+                },
+                {
+                    callID: 2,
+                    title: 'Call 2',
+                    projectID,
+                    startTime: null,
+                    endTime: null,
+                    summary: null,
+                    isAnalyzed: false,
+                    attendees: []
+                }
+            ]);
         });
 
         it('should throw error when service fails', async () => {
@@ -72,7 +140,19 @@ This is a different speaker.`;
                 projectID: 1,
                 title: 'Test Call',
                 summary: 'WEBVTT\n\n00:00:00.000 --> 00:00:05.000\n<v Speaker1>Test summary',
-                internalParticipants: [],
+                internalParticipants: [{
+                    userID: 1,
+                    callID: 1,
+                    user: {
+                        name: 'Test User',
+                        userID: 1,
+                        email: 'test@example.com',
+                        uid: 'user123',
+                        role: null,
+                        profilePicture: null,
+                        departmentID: null
+                    }
+                }],
                 externalParticipants: [],
                 startTime: null,
                 endTime: null,
@@ -136,7 +216,7 @@ This is a different speaker.`;
                             name: 'Test User',
                             userID: 1,
                             email: 'test@example.com',
-                            password: null,
+                            uid: 'user123',
                             role: null,
                             profilePicture: null,
                             departmentID: null
