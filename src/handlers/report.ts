@@ -47,6 +47,21 @@ class ReportHandler {
             next(err);
         }
     }
+
+    public async getReportsByProjectId(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { projectId } = req.params;
+
+            if (!projectId || isNaN(parseInt(projectId as string))) {
+                throw new HttpException(400, 'Valid project ID is required');
+            }
+
+            const reports = await this.reportController.getReportsByProjectId(parseInt(projectId as string));
+            res.status(200).json(reports);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export default ReportHandler; 

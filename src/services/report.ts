@@ -102,9 +102,6 @@ class ReportService {
                     project: {
                         connect: { projectID: data.projectID }
                     },
-                    // Puedes añadir otros campos si son necesarios, por ejemplo:
-                    // generatedAt: new Date(),
-                    // format: 'Link'
                 },
             });
             return newReport;
@@ -113,6 +110,22 @@ class ReportService {
                 throw err;
             }
             throw new HttpException(500, "Error creating report: " + err);
+        }
+    }
+
+    async getReportsByProjectId(projectId: number): Promise<Report[]> {
+        try {
+            const reports = await prisma.report.findMany({
+                where: {
+                    projectID: projectId
+                }
+            });
+            return reports;
+        } catch (err) {
+            if (err instanceof HttpException) {
+                throw err;
+            }
+            throw new HttpException(500, "Error fetching reports by project ID: " + err);
         }
     }
 }

@@ -19,6 +19,10 @@ class ReportController {
     async createReport(data: { reportType: string, fileURL: string, projectID: number }): Promise<Report> {
         return this.reportService.createReport(data);
     }
+
+    async getReportsByProjectId(projectId: number): Promise<Report[]> {
+        return this.reportService.getReportsByProjectId(projectId);
+    }
 }
 
 export default ReportController; 

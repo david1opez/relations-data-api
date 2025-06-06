@@ -8,4 +8,7 @@ router.get("/reports", reportHandler.getAllReports.bind(reportHandler));
 router.get("/reports/:id", reportHandler.getReportById.bind(reportHandler));
 router.post("/reports", reportHandler.createReport.bind(reportHandler));
 
+// Nueva ruta para obtener reportes por projectID
+router.get("/reports/byProject/:projectId", reportHandler.getReportsByProjectId.bind(reportHandler));
+
 export default router; 
