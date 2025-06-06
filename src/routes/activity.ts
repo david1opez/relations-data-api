@@ -100,6 +100,62 @@ router.post('/log', async (req, res) => {
     } catch (err) {
         Error(res, 500, err);
     }
+});
+
+router.get('/stats', async (req, res) => {
+    const { uid } = req.query;
+
+    if (!uid) return Error(res, 400, 'Missing uid');
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { uid: String(uid) },
+            select: { userID: true }
+        });
+
+        if (!user) return Error(res, 404, 'User not found');
+
+        const userProjects = await prisma.userProject.findMany({
+            where: { userID: user.userID },
+            select: { projectID: true }
+        });
+        const projectIDs = userProjects.map(up => up.projectID);
+
+        const totalProjects = projectIDs.length;
+
+        let activeProjects = 0;
+
+        if (projectIDs.length > 0) {
+            activeProjects = await prisma.project.count({
+                where: {
+                    projectID: { in: projectIDs },
+                    OR: [
+                        { endDate: null },
+                        { endDate: { gt: new Date() } }
+                    ]
+                }
+            });
+        }
+
+        let analyzedCalls = 0;
+
+        if (user.userID) {
+            analyzedCalls = await prisma.internalCallParticipants.count({
+                where: {
+                    userID: user.userID,
+                    call: { isAnalyzed: true }
+                }
+            });
+        }
+
+        return SendResponse(res, 200, {
+            totalProjects,
+            activeProjects,
+            analyzedCalls
+        });
+    } catch (err) {
+        Error(res, 500, err);
+    }
 })
 
 export default router;
