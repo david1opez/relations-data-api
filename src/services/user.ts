@@ -117,9 +117,6 @@ class UserService {
         where: { userID: userID },
       })
       
-      await prisma.activityLog.deleteMany({
-        where: { userID: userID },
-      })
   
       await prisma.user.delete({
         where: { userID: userID },
