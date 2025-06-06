@@ -4,7 +4,6 @@ import { Error, SendResponse } from "../utils/utils";
 
 const router = Router()
 
-
 router.get('/recent', async (req, res) => {
     const { uid } = req.query;
 

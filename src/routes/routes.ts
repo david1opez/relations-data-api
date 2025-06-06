@@ -19,6 +19,8 @@ api.get("/", Home);
 api.post("/msft-auth", MicrosoftAuth);
 api.use("/client", clientRouter);
 api.use("/report", reportRouter);
+api.use("/activity", activity);
+
 export default Router().use("/", api);
 
 
