@@ -6,5 +6,6 @@ const reportHandler = new ReportHandler();
 
 router.get("/reports", reportHandler.getAllReports.bind(reportHandler));
 router.get("/reports/:id", reportHandler.getReportById.bind(reportHandler));
+router.post("/reports", reportHandler.createReport.bind(reportHandler));
 
 export default router; 

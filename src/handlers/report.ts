@@ -32,6 +32,21 @@ class ReportHandler {
             next(err);
         }
     }
+
+    public async createReport(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { reportType, fileURL, projectID } = req.body;
+
+            if (!reportType || !fileURL || !projectID) {
+                throw new HttpException(400, 'Missing required fields: reportType, fileURL, or projectID');
+            }
+
+            const newReport = await this.reportController.createReport({ reportType, fileURL, projectID });
+            res.status(201).json(newReport);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export default ReportHandler; 

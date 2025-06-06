@@ -1,4 +1,4 @@
-import { Report } from "@prisma/client";
+import { Report, ReportCall } from "@prisma/client";
 import prisma from "../../client";
 import HttpException from "../models/http-exception";
 
@@ -90,6 +90,29 @@ class ReportService {
                 throw err;
             }
             throw new HttpException(500, `Error fetching report: ${err}`);
+        }
+    }
+
+    async createReport(data: { reportType: string, fileURL: string, projectID: number }): Promise<Report> {
+        try {
+            const newReport = await prisma.report.create({
+                data: {
+                    reportType: data.reportType,
+                    fileURL: data.fileURL,
+                    project: {
+                        connect: { projectID: data.projectID }
+                    },
+                    // Puedes añadir otros campos si son necesarios, por ejemplo:
+                    // generatedAt: new Date(),
+                    // format: 'Link'
+                },
+            });
+            return newReport;
+        } catch (err) {
+            if (err instanceof HttpException) {
+                throw err;
+            }
+            throw new HttpException(500, "Error creating report: " + err);
         }
     }
 }
